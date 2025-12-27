@@ -1274,6 +1274,14 @@ function applyTheme(theme) {
   document.body.classList.add(theme);
   localStorage.setItem('theme', theme);
   themeToggle.textContent = theme === 'light' ? '🌞' : '🌙';
+  
+  // Recargar mapa con nuevo estilo
+  if (map) {
+    const mapContainer = document.getElementById('map');
+    mapContainer.innerHTML = '';
+    map = null;
+    setTimeout(initMap, 100);
+  }
 }
 themeToggle.onclick = () => {
   const newTheme = document.body.classList.contains('light') ? 'dark' : 'light';
@@ -2064,6 +2072,7 @@ if (e.target === this) closeModal();
 </script>
 </body>
 </html>
+
 
 
 
