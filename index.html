@@ -122,9 +122,24 @@ header {
   margin-bottom: 24px;
   position: relative;
   border: 1px solid var(--border);
+  z-index: 1; /* CRÍTICO: Evita que el mapa quede encima */
 }
 
-#map { height: 100%; width: 100%; }
+#map { 
+  height: 100%; 
+  width: 100%; 
+  z-index: 1;
+}
+
+/* Asegurar que el contenido del mapa no se superponga */
+.leaflet-pane,
+.leaflet-map-pane {
+  z-index: 1 !important;
+}
+
+.leaflet-control-container {
+  z-index: 2 !important;
+}
 
 .map-legend {
   position: absolute;
@@ -1853,3 +1868,4 @@ if (e.target === this) closeModal();
 </script>
 </body>
 </html>
+
