@@ -1288,28 +1288,101 @@ function initMap() {
   if (map) return;
   
   try {
-    // Usar tiles de Mapbox o CartoDB (más modernos que OpenStreetMap)
-    map = L.map('map', {
-      zoomControl: true,
-      scrollWheelZoom: true
-    }).setView([-34.6037, -58.3816], 13);
-    
-    // Tema oscuro/claro según el tema actual
     const isDark = document.body.classList.contains('dark');
     
-    if (isDark) {
-      // Mapa oscuro moderno
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© OpenStreetMap, © CartoDB',
-        maxZoom: 19
-      }).addTo(map);
-    } else {
-      // Mapa claro moderno
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© OpenStreetMap, © CartoDB',
-        maxZoom: 19
-      }).addTo(map);
-    }
+    // Configuración del mapa
+    const mapOptions = {
+      center: { lat: -34.6037, lng: -58.3816 },
+      zoom: 13,
+      mapId: isDark ? '6a4b3e1e4f5c8d9a' : 'f0e1d2c3b4a59687', // IDs de mapas con estilos
+      disableDefaultUI: false,
+      zoomControl: true,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+      styles: isDark ? [
+        { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+        { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+        {
+          featureType: "administrative.locality",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#d59563" }],
+        },
+        {
+          featureType: "poi",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#d59563" }],
+        },
+        {
+          featureType: "poi.park",
+          elementType: "geometry",
+          stylers: [{ color: "#263c3f" }],
+        },
+        {
+          featureType: "poi.park",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#6b9a76" }],
+        },
+        {
+          featureType: "road",
+          elementType: "geometry",
+          stylers: [{ color: "#38414e" }],
+        },
+        {
+          featureType: "road",
+          elementType: "geometry.stroke",
+          stylers: [{ color: "#212a37" }],
+        },
+        {
+          featureType: "road",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#9ca5b3" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "geometry",
+          stylers: [{ color: "#746855" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "geometry.stroke",
+          stylers: [{ color: "#1f2835" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#f3d19c" }],
+        },
+        {
+          featureType: "transit",
+          elementType: "geometry",
+          stylers: [{ color: "#2f3948" }],
+        },
+        {
+          featureType: "transit.station",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#d59563" }],
+        },
+        {
+          featureType: "water",
+          elementType: "geometry",
+          stylers: [{ color: "#17263c" }],
+        },
+        {
+          featureType: "water",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#515c6d" }],
+        },
+        {
+          featureType: "water",
+          elementType: "labels.text.stroke",
+          stylers: [{ color: "#17263c" }],
+        },
+      ] : []
+    };
+
+    map = new google.maps.Map(document.getElementById('map'), mapOptions);
 
     function getImportanceColor(imp) {
       if (imp === 'high') return '#ff3b30';
@@ -1317,65 +1390,106 @@ function initMap() {
       return '#4cd964';
     }
 
-    // Pines verticales mejorados (gota)
+    // Crear marcadores personalizados
     feed.forEach(item => {
       const color = getImportanceColor(item.importance);
       
-      const pin = L.divIcon({
-        className: 'custom-pin',
-        html: `
-          <div style="
-            position: relative;
-            width: 32px;
-            height: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          ">
-            <svg width="32" height="45" viewBox="0 0 32 45" style="filter: drop-shadow(0 3px 8px rgba(0,0,0,0.4));">
-              <!-- Gota del pin -->
-              <path d="M16 0C7.16 0 0 7.16 0 16c0 11.25 16 29 16 29s16-17.75 16-29c0-8.84-7.16-16-16-16z" 
-                    fill="${color}"/>
-              <!-- Círculo interior blanco -->
-              <circle cx="16" cy="15" r="7" fill="white"/>
-              <!-- Punto central -->
-              <circle cx="16" cy="15" r="4" fill="${color}"/>
-            </svg>
-            <!-- Precio en el pin -->
-            <div style="
-              position: absolute;
-              top: 8px;
-              left: 50%;
-              transform: translateX(-50%);
-              background: rgba(0,0,0,0.7);
-              color: white;
-              padding: 2px 6px;
-              border-radius: 10px;
-              font-size: 10px;
-              font-weight: 700;
-              white-space: nowrap;
-              pointer-events: none;
-            ">$${item.price}</div>
+      // SVG del pin personalizado
+      const pinSVG = `
+        <svg width="40" height="55" viewBox="0 0 40 55" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="shadow-${item.id}" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+              <feOffset dx="0" dy="3" result="offsetblur"/>
+              <feComponentTransfer>
+                <feFuncA type="linear" slope="0.3"/>
+              </feComponentTransfer>
+              <feMerge>
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <g filter="url(#shadow-${item.id})">
+            <path d="M20 0C8.95 0 0 8.95 0 20c0 14.06 20 35 20 35s20-20.94 20-35c0-11.05-8.95-20-20-20z" 
+                  fill="${color}"/>
+            <circle cx="20" cy="19" r="9" fill="white" opacity="0.9"/>
+            <circle cx="20" cy="19" r="6" fill="${color}"/>
+          </g>
+        </svg>
+      `;
+
+      const pinElement = document.createElement('div');
+      pinElement.style.cssText = `
+        position: relative;
+        width: 40px;
+        height: 55px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+      `;
+      pinElement.innerHTML = `
+        ${pinSVG}
+        <div style="
+          position: absolute;
+          top: -8px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(0,0,0,0.85);
+          color: white;
+          padding: 3px 8px;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: 700;
+          white-space: nowrap;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        ">$${item.price}</div>
+      `;
+
+      const marker = new google.maps.marker.AdvancedMarkerElement({
+        map: map,
+        position: { lat: item.lat, lng: item.lng },
+        content: pinElement,
+        title: item.title
+      });
+
+      // InfoWindow para hover
+      const infoWindow = new google.maps.InfoWindow({
+        content: `
+          <div style="padding: 8px; min-width: 200px;">
+            <div style="font-weight: 600; margin-bottom: 4px; font-size: 14px; color: #1a1a1a;">${item.title}</div>
+            <div style="font-size: 12px; color: #666;">${item.hashtags}</div>
+            <div style="margin-top: 6px; font-size: 13px; font-weight: 600; color: #ff3b30;">$${item.price}</div>
           </div>
-        `,
-        iconSize: [32, 45],
-        iconAnchor: [16, 45], // Punto de anclaje en la punta del pin
-        popupAnchor: [0, -45]
+        `
       });
-      
-      const marker = L.marker([item.lat, item.lng], { icon: pin }).addTo(map);
-      
-      // Popup al hacer hover
-      marker.on('mouseover', function() {
-        this.bindPopup(`
-          <div style="font-weight: 600; margin-bottom: 4px;">${item.title}</div>
-          <div style="font-size: 12px; color: #666;">${item.hashtags}</div>
-        `).openPopup();
+
+      // Hover para mostrar info
+      pinElement.addEventListener('mouseenter', () => {
+        infoWindow.open(map, marker);
+        pinElement.style.transform = 'scale(1.1)';
       });
-      
-      // Click para abrir detalle
-      marker.on('click', () => openDetail(item.id));
+
+      pinElement.addEventListener('mouseleave', () => {
+        infoWindow.close();
+        pinElement.style.transform = 'scale(1)';
+      });
+
+      // Click con animación
+      pinElement.addEventListener('click', () => {
+        // Animación de bounce
+        pinElement.classList.add('pin-clicked');
+        
+        // Centrar mapa en el pin
+        map.panTo({ lat: item.lat, lng: item.lng });
+        
+        // Abrir detalle después de la animación
+        setTimeout(() => {
+          pinElement.classList.remove('pin-clicked');
+          openDetail(item.id);
+        }, 300);
+      });
     });
+
   } catch (error) {
     console.error('Error inicializando mapa:', error);
   }
@@ -1950,5 +2064,6 @@ if (e.target === this) closeModal();
 </script>
 </body>
 </html>
+
 
 
