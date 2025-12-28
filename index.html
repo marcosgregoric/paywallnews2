@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Paywall News - Marketplace de Noticias</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!-- Google Maps ya no necesita CSS externo -->
 <style>
 body.light {
   --bg: #f8f9fa;
@@ -122,9 +122,37 @@ header {
   margin-bottom: 24px;
   position: relative;
   border: 1px solid var(--border);
+  z-index: 1;
 }
 
-#map { height: 100%; width: 100%; }
+#map { 
+  height: 100%; 
+  width: 100%; 
+  z-index: 1;
+  border-radius: 16px;
+}
+
+/* Animación para pins clickeados */
+@keyframes pinBounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  25% { transform: translateY(-15px) scale(1.1); }
+  50% { transform: translateY(-8px) scale(1.05); }
+  75% { transform: translateY(-12px) scale(1.08); }
+}
+
+.pin-clicked {
+  animation: pinBounce 0.6s ease-out;
+}
+
+/* Asegurar que el contenido del mapa no se superponga */
+.leaflet-pane,
+.leaflet-map-pane {
+  z-index: 1 !important;
+}
+
+.leaflet-control-container {
+  z-index: 2 !important;
+}
 
 .map-legend {
   position: absolute;
@@ -1219,7 +1247,7 @@ header {
     <div class="modal-body" id="modalBody"></div>
   </div>
 </div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&libraries=marker"></script>
 <script>// ============ DATOS ============
 const feed = [
   {id:1,title:'Accidente en Av. Mitre',price:50,lat:-34.6037,lng:-58.3816,importance:'high',img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop',licenseType:'nonexclusive',status:'for_sale',hashtags:'#accidente #tránsito',trending:true},
@@ -1246,6 +1274,14 @@ function applyTheme(theme) {
   document.body.classList.add(theme);
   localStorage.setItem('theme', theme);
   themeToggle.textContent = theme === 'light' ? '🌞' : '🌙';
+  
+  // Recargar mapa con nuevo estilo
+  if (map) {
+    const mapContainer = document.getElementById('map');
+    mapContainer.innerHTML = '';
+    map = null;
+    setTimeout(initMap, 100);
+  }
 }
 themeToggle.onclick = () => {
   const newTheme = document.body.classList.contains('light') ? 'dark' : 'light';
@@ -1260,10 +1296,101 @@ function initMap() {
   if (map) return;
   
   try {
-    map = L.map('map').setView([-34.6037, -58.3816], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
+    const isDark = document.body.classList.contains('dark');
+    
+    // Configuración del mapa
+    const mapOptions = {
+      center: { lat: -34.6037, lng: -58.3816 },
+      zoom: 13,
+      mapId: isDark ? '6a4b3e1e4f5c8d9a' : 'f0e1d2c3b4a59687', // IDs de mapas con estilos
+      disableDefaultUI: false,
+      zoomControl: true,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+      styles: isDark ? [
+        { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+        { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+        { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+        {
+          featureType: "administrative.locality",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#d59563" }],
+        },
+        {
+          featureType: "poi",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#d59563" }],
+        },
+        {
+          featureType: "poi.park",
+          elementType: "geometry",
+          stylers: [{ color: "#263c3f" }],
+        },
+        {
+          featureType: "poi.park",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#6b9a76" }],
+        },
+        {
+          featureType: "road",
+          elementType: "geometry",
+          stylers: [{ color: "#38414e" }],
+        },
+        {
+          featureType: "road",
+          elementType: "geometry.stroke",
+          stylers: [{ color: "#212a37" }],
+        },
+        {
+          featureType: "road",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#9ca5b3" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "geometry",
+          stylers: [{ color: "#746855" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "geometry.stroke",
+          stylers: [{ color: "#1f2835" }],
+        },
+        {
+          featureType: "road.highway",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#f3d19c" }],
+        },
+        {
+          featureType: "transit",
+          elementType: "geometry",
+          stylers: [{ color: "#2f3948" }],
+        },
+        {
+          featureType: "transit.station",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#d59563" }],
+        },
+        {
+          featureType: "water",
+          elementType: "geometry",
+          stylers: [{ color: "#17263c" }],
+        },
+        {
+          featureType: "water",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#515c6d" }],
+        },
+        {
+          featureType: "water",
+          elementType: "labels.text.stroke",
+          stylers: [{ color: "#17263c" }],
+        },
+      ] : []
+    };
+
+    map = new google.maps.Map(document.getElementById('map'), mapOptions);
 
     function getImportanceColor(imp) {
       if (imp === 'high') return '#ff3b30';
@@ -1271,14 +1398,106 @@ function initMap() {
       return '#4cd964';
     }
 
+    // Crear marcadores personalizados
     feed.forEach(item => {
-      const pin = L.divIcon({
-        className: '',
-        html: `<div style="width:24px;height:24px;background:${getImportanceColor(item.importance)};border-radius:50% 50% 50% 0;transform:rotate(45deg);border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,0.3);"></div>`
+      const color = getImportanceColor(item.importance);
+      
+      // SVG del pin personalizado
+      const pinSVG = `
+        <svg width="40" height="55" viewBox="0 0 40 55" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="shadow-${item.id}" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+              <feOffset dx="0" dy="3" result="offsetblur"/>
+              <feComponentTransfer>
+                <feFuncA type="linear" slope="0.3"/>
+              </feComponentTransfer>
+              <feMerge>
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <g filter="url(#shadow-${item.id})">
+            <path d="M20 0C8.95 0 0 8.95 0 20c0 14.06 20 35 20 35s20-20.94 20-35c0-11.05-8.95-20-20-20z" 
+                  fill="${color}"/>
+            <circle cx="20" cy="19" r="9" fill="white" opacity="0.9"/>
+            <circle cx="20" cy="19" r="6" fill="${color}"/>
+          </g>
+        </svg>
+      `;
+
+      const pinElement = document.createElement('div');
+      pinElement.style.cssText = `
+        position: relative;
+        width: 40px;
+        height: 55px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+      `;
+      pinElement.innerHTML = `
+        ${pinSVG}
+        <div style="
+          position: absolute;
+          top: -8px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(0,0,0,0.85);
+          color: white;
+          padding: 3px 8px;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: 700;
+          white-space: nowrap;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        ">$${item.price}</div>
+      `;
+
+      const marker = new google.maps.marker.AdvancedMarkerElement({
+        map: map,
+        position: { lat: item.lat, lng: item.lng },
+        content: pinElement,
+        title: item.title
       });
-      const marker = L.marker([item.lat, item.lng], { icon: pin }).addTo(map);
-      marker.on('click', () => openDetail(item.id));
+
+      // InfoWindow para hover
+      const infoWindow = new google.maps.InfoWindow({
+        content: `
+          <div style="padding: 8px; min-width: 200px;">
+            <div style="font-weight: 600; margin-bottom: 4px; font-size: 14px; color: #1a1a1a;">${item.title}</div>
+            <div style="font-size: 12px; color: #666;">${item.hashtags}</div>
+            <div style="margin-top: 6px; font-size: 13px; font-weight: 600; color: #ff3b30;">$${item.price}</div>
+          </div>
+        `
+      });
+
+      // Hover para mostrar info
+      pinElement.addEventListener('mouseenter', () => {
+        infoWindow.open(map, marker);
+        pinElement.style.transform = 'scale(1.1)';
+      });
+
+      pinElement.addEventListener('mouseleave', () => {
+        infoWindow.close();
+        pinElement.style.transform = 'scale(1)';
+      });
+
+      // Click con animación
+      pinElement.addEventListener('click', () => {
+        // Animación de bounce
+        pinElement.classList.add('pin-clicked');
+        
+        // Centrar mapa en el pin
+        map.panTo({ lat: item.lat, lng: item.lng });
+        
+        // Abrir detalle después de la animación
+        setTimeout(() => {
+          pinElement.classList.remove('pin-clicked');
+          openDetail(item.id);
+        }, 300);
+      });
     });
+
   } catch (error) {
     console.error('Error inicializando mapa:', error);
   }
@@ -1853,4 +2072,6 @@ if (e.target === this) closeModal();
 </script>
 </body>
 </html>
-```
+
+
+
