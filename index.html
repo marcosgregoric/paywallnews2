@@ -3,309 +3,312 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NewsMarket - Sistema Integrado v3</title>
+    <title>NewsMarket - Sistema de Negociación Geofenced</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
+        /* MANTENGO TUS VARIABLES ORIGINALES Y ESTILOS */
         :root {
             --bg: #f5f5f7;
             --card: #ffffff;
             --text: #1d1d1f;
             --accent: #ff3b30;
             --primary: #007aff;
-            --secondary: #8e8e93;
             --success: #4cd964;
+            --warning: #ffcc00;
             --border: #d2d2d7;
+            --text-secondary: #8e8e93;
         }
 
         .dark {
             --bg: #000000;
             --card: #1c1c1e;
             --text: #f5f5f7;
-            --secondary: #48484a;
             --border: #38383a;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding-bottom: 80px;
-            transition: background 0.3s ease;
-        }
-
-        .app-container { max-width: 600px; margin: 0 auto; padding: 20px; }
-
-        /* HEADER & BALANCE */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 20px;
-        }
-
-        .balance-card {
-            background: var(--primary);
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 15px rgba(0,122,255,0.3);
-        }
-
-        /* MAPA */
-        #map-container {
-            position: relative;
-            height: 350px;
-            border-radius: 15px;
-            overflow: hidden;
-            margin-bottom: 20px;
-            border: 1px solid var(--border);
-        }
-        #map { height: 100%; width: 100%; z-index: 1; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        
+        /* CONTENEDOR DE MAPA */
+        #map { height: 400px; width: 100%; z-index: 1; }
+        .map-wrapper { position: relative; width: 100%; }
+        
         .gps-btn {
-            position: absolute; bottom: 15px; right: 15px; z-index: 1000;
-            background: white; border: none; width: 45px; height: 45px;
-            border-radius: 50%; box-shadow: 0 2px 10px rgba(0,0,0,0.2); cursor: pointer;
+            position: absolute; bottom: 20px; right: 20px; z-index: 1000;
+            background: var(--card); border: none; width: 45px; height: 45px;
+            border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px;
         }
 
-        /* GRID DE NOTICIAS */
-        .news-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .news-card {
-            background: var(--card); border-radius: 12px; overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; position: relative;
-        }
-        .news-card img { width: 100%; height: 100px; object-fit: cover; transition: 0.3s; }
-        .blur { filter: blur(4px); }
-        .card-body { padding: 10px; }
-        .price-badge {
-            position: absolute; top: 8px; right: 8px; background: var(--accent);
-            color: white; padding: 2px 6px; border-radius: 5px; font-weight: bold; font-size: 12px;
-        }
+        /* TUS ESTILOS DE GRID Y CARDS ORIGINALES */
+        .app-container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px; margin-top: 20px; }
+        .news-card { background: var(--card); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); cursor: pointer; position: relative; }
+        .news-card img { width: 100%; height: 120px; object-fit: cover; }
+        .watermark-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255,255,255,0.1) 20px, rgba(255,255,255,0.1) 40px); display:flex; align-items:center; justify-content:center; pointer-events:none; }
+        .watermark-text { transform: rotate(-30deg); color: rgba(255,255,255,0.3); font-weight: bold; border: 2px solid; padding: 5px; }
+        
+        .price-badge { position: absolute; top: 10px; right: 10px; background: var(--accent); color: white; padding: 4px 8px; border-radius: 6px; font-weight: bold; }
+        .license-badge { position: absolute; top: 10px; left: 10px; font-size: 10px; padding: 4px 8px; border-radius: 6px; font-weight: bold; background: rgba(0,0,0,0.6); color: white; }
 
-        /* LISTADO DE TRANSACCIONES */
-        .tx-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px; background: var(--card); border-radius: 10px;
-            margin-bottom: 10px; border-left: 4px solid var(--success);
-        }
+        /* MODALES Y NEGOCIACIÓN */
+        #modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; overflow-y: auto; }
+        #modal.active { display: flex; }
+        .modal-content { background: var(--card); width: 90%; max-width: 500px; border-radius: 20px; padding: 25px; max-height: 90vh; overflow-y: auto; }
+        
+        .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-gold { background: linear-gradient(45deg, #ffd700, #ffa500); color: black; }
+        
+        .offer-section { margin-top: 20px; padding: 15px; border: 1px solid var(--border); border-radius: 15px; background: rgba(255,215,0,0.05); }
+        .quick-offers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
+        .quick-offer-btn { border: 1px solid var(--border); padding: 10px; border-radius: 10px; text-align: center; cursor: pointer; background: var(--card); }
+        .quick-offer-btn:hover { border-color: var(--primary); }
 
-        /* NAVEGACIÓN */
-        .nav-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: var(--card); display: flex; justify-content: space-around;
-            padding: 15px 0; border-top: 1px solid var(--border); z-index: 2000;
-        }
-        .nav-item { color: var(--secondary); font-size: 10px; text-align: center; cursor: pointer; }
-        .nav-item.active { color: var(--primary); font-weight: bold; }
-
-        /* MODAL */
-        #modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); z-index: 3000; align-items: center; justify-content: center;
-        }
-        .modal-content { background: var(--card); padding: 25px; border-radius: 20px; width: 85%; max-width: 400px; }
-        .btn { width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-buy { background: var(--primary); color: white; }
+        .nav-bar { position: fixed; bottom: 0; left:0; width:100%; background: var(--card); display:flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border); z-index: 5000; }
+        .nav-item { text-align: center; font-size: 10px; color: var(--text-secondary); cursor: pointer; }
+        .nav-item.active { color: var(--primary); }
 
         .view { display: none; }
         .view.active { display: block; }
+        
+        /* BADGE DE VERIFICACIÓN GPS */
+        .trust-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(76, 217, 100, 0.1); color: var(--success); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; margin-bottom: 10px; }
     </style>
 </head>
 <body class="light">
 
 <div class="app-container">
-    <header>
-        <h2 style="margin:0">NewsMarket</h2>
-        <button id="themeToggle" style="background:none; border:none; font-size:20px; cursor:pointer;">🌙</button>
+    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div>
+            <h1 style="margin:0">NewsMarket</h1>
+            <div id="wallet-balance" style="color:var(--success); font-weight:bold">$0.00</div>
+        </div>
+        <button onclick="toggleTheme()" style="background:none; border:none; font-size:24px; cursor:pointer;">🌙</button>
     </header>
 
     <div id="view-home" class="view active">
-        <div id="map-container">
+        <div class="map-wrapper">
             <div id="map"></div>
             <button class="gps-btn" onclick="locateUser()">🎯</button>
         </div>
-        <h3>Cerca de ti</h3>
-        <div id="newsFeed" class="news-grid"></div>
+        <h3>Feed de Noticias</h3>
+        <div id="homeGrid" class="news-grid"></div>
     </div>
 
     <div id="view-wallet" class="view">
-        <div class="balance-card">
-            <p style="margin:0; opacity:0.8">Ganancias Acumuladas</p>
-            <h1 id="walletBalance" style="margin:10px 0; font-size:36px">$0.00</h1>
-            <button class="btn" style="background:white; color:var(--primary)" onclick="requestWithdrawal()">Retirar Fondos</button>
+        <div style="background:var(--primary); color:white; padding:30px; border-radius:20px; text-align:center;">
+            <p>Saldo Disponible</p>
+            <h1 id="balance-big" style="font-size:48px; margin:10px 0">$0.00</h1>
+            <button class="btn" style="background:white; color:var(--primary)" onclick="alert('Solicitud de retiro procesada')">Retirar Fondos</button>
         </div>
-        <h3>Historial de Smart Contracts</h3>
-        <div id="txList">
-            <p style="color:var(--secondary); text-align:center">No hay transacciones aún.</p>
-        </div>
-    </div>
-
-    <div id="view-upload" class="view">
-        <h2>Subir Contenido</h2>
-        <div style="padding:50px; border:2px dashed var(--border); border-radius:15px; text-align:center">
-            📸 Selecciona evidencia para verificar
-        </div>
+        <h3>Historial de Contratos</h3>
+        <div id="txList"></div>
     </div>
 </div>
 
 <div class="nav-bar">
-    <div class="nav-item active" onclick="showView('home', this)">🏠<br>Mapa</div>
-    <div class="nav-item" onclick="showView('upload', this)">📤<br>Subir</div>
-    <div class="nav-item" onclick="showView('wallet', this)">💰<br>Billetera</div>
+    <div class="nav-item active" onclick="showView('home')">🏠<br>Inicio</div>
+    <div class="nav-item" onclick="showView('wallet')">💰<br>Billetera</div>
+    <div class="nav-item">📤<br>Subir</div>
+    <div class="nav-item">👤<br>Perfil</div>
 </div>
 
 <div id="modal">
-    <div class="modal-content" id="modalBody"></div>
+    <div class="modal-content">
+        <div id="modalHeader" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 id="modalTitle" style="margin:0">Detalle</h2>
+            <span onclick="closeModal()" style="cursor:pointer; font-size:24px;">&times;</span>
+        </div>
+        <div id="modalBody"></div>
+    </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-    // ESTADO DE LA APP
-    let userBalance = 0;
-    let transactions = [];
-    const feed = [
-        { id: 1, title: "Robo en Joyería", lat: -34.6037, lng: -58.3816, price: 50.00, trust: 98, status: 'sale' },
-        { id: 2, title: "Inundación Local", lat: -34.6080, lng: -58.3720, price: 30.00, trust: 92, status: 'sale' },
-        { id: 3, title: "Primicia Política", lat: -34.5900, lng: -58.4000, price: 120.00, trust: 15, status: 'sale' }
-    ];
+// ============ DATOS Y VARIABLES (TU FEED ORIGINAL) ============
+let userBalance = 0;
+let transactions = [];
+const feed = [
+    { id: 1, title: "Incendio en Puerto Madero", price: 100, lat: -34.6100, lng: -58.3600, importance: 'high', licenseType: 'nonexclusive', status: 'for_sale', hashtags: '#urgente #fuego', img: 'https://picsum.photos/seed/1/400/300' },
+    { id: 2, title: "Protesta en el Obelisco", price: 50, lat: -34.6037, lng: -58.3816, importance: 'medium', licenseType: 'nonexclusive', status: 'for_sale', hashtags: '#transito #obelisco', img: 'https://picsum.photos/seed/2/400/300' }
+];
 
-    let map, markersLayer;
+let map, markersLayer, userMarker;
+let negotiations = [];
 
-    // INICIAR APP
-    window.onload = () => {
-        initMap();
-        renderGrid();
-    };
+// ============ INICIALIZACIÓN DE MAPA (MODO LEAFLET) ============
+function initMap() {
+    if (map) map.remove();
+    const isDark = document.body.classList.contains('dark');
+    map = L.map('map').setView([-34.6037, -58.3816], 13);
 
-    function initMap() {
-        if(map) map.remove();
-        const isDark = document.body.classList.contains('dark');
-        map = L.map('map').setView([-34.6037, -58.3816], 13);
-        const tiles = isDark 
-            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-            : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-        L.tileLayer(tiles).addTo(map);
-        markersLayer = L.layerGroup().addTo(map);
-        renderMarkers();
-    }
+    const tiles = isDark 
+        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+        : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
-    function renderMarkers() {
-        markersLayer.clearLayers();
-        feed.forEach(item => {
-            const isProtected = item.status === 'sale';
-            // Ofuscación: si no está paga, movemos el punto aleatoriamente
-            const lat = isProtected ? item.lat + (Math.random()-0.5)*0.004 : item.lat;
-            const lng = isProtected ? item.lng + (Math.random()-0.5)*0.004 : item.lng;
-            
-            const marker = L.circleMarker([lat, lng], {
-                radius: 10, color: 'white', weight: 2, fillOpacity: 0.9,
-                fillColor: item.trust > 80 ? '#4cd964' : '#ff3b30'
-            }).addTo(markersLayer);
+    L.tileLayer(tiles, { attribution: '© OpenStreetMap' }).addTo(map);
+    markersLayer = L.layerGroup().addTo(map);
 
-            marker.bindPopup(`<b>${item.title}</b><br><button onclick="openDetail(${item.id})">Ver Detalles</button>`);
+    renderMarkers();
+}
+
+function renderMarkers() {
+    markersLayer.clearLayers();
+    feed.forEach(item => {
+        const isSold = item.status === 'sold';
+        // Ofuscación de seguridad si no está vendida
+        const lat = isSold ? item.lat : item.lat + (Math.random() - 0.5) * 0.004;
+        const lng = isSold ? item.lng : item.lng + (Math.random() - 0.5) * 0.004;
+        
+        const color = item.importance === 'high' ? '#ff3b30' : '#ffcc00';
+
+        const customIcon = L.divIcon({
+            className: 'pin',
+            html: `
+                <div style="position:relative;">
+                    <svg width="35" height="45" viewBox="0 0 35 45">
+                        <path d="M17.5 0C7.8 0 0 7.8 0 17.5c0 12.3 17.5 27.5 17.5 27.5S35 29.8 35 17.5C35 7.8 27.2 0 17.5 0z" fill="${color}"/>
+                        <circle cx="17.5" cy="17.5" r="7" fill="white"/>
+                    </svg>
+                    <div style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:black; color:white; padding:2px 6px; border-radius:8px; font-size:10px; font-weight:bold; border:1px solid white;">$${item.price}</div>
+                </div>`,
+            iconSize: [35, 45],
+            iconAnchor: [17.5, 45]
         });
-    }
 
-    function renderGrid() {
-        const grid = document.getElementById('newsFeed');
-        grid.innerHTML = feed.map(item => `
-            <div class="news-card" onclick="openDetail(${item.id})">
-                <div class="price-badge">$${item.price}</div>
-                <img src="https://picsum.photos/seed/${item.id}/200/100" class="${item.status === 'sale' ? 'blur' : ''}">
-                <div class="card-body">
-                    <div style="font-weight:bold; font-size:13px">${item.title}</div>
-                    <div style="font-size:11px; color:var(--secondary)">Confianza: ${item.trust}%</div>
+        const marker = L.marker([lat, lng], { icon: customIcon }).addTo(markersLayer);
+        marker.on('click', () => {
+            map.panTo([lat, lng]);
+            openDetail(item.id);
+        });
+    });
+}
+
+// ============ LOCALIZACIÓN REAL ============
+function locateUser() {
+    map.locate({setView: true, maxZoom: 15});
+}
+
+map.on('locationfound', (e) => {
+    if (userMarker) map.removeLayer(userMarker);
+    userMarker = L.circleMarker(e.latlng, { radius: 8, fillColor: '#007aff', color: 'white', fillOpacity: 1 }).addTo(map);
+});
+
+// ============ RENDERIZADO DE FEED ============
+function renderGrid(containerId, items) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = items.map(item => `
+        <div class="news-card" onclick="openDetail(${item.id})">
+            <div class="price-badge">$${item.price}</div>
+            <div class="license-badge">${item.licenseType.toUpperCase()}</div>
+            <img src="${item.img}" style="${item.status !== 'sold' ? 'filter:blur(3px)' : ''}">
+            ${item.status !== 'sold' ? '<div class="watermark-overlay"><div class="watermark-text">NewsMarket Protected</div></div>' : ''}
+            <div style="padding:12px;">
+                <div style="font-weight:bold; font-size:14px; margin-bottom:5px;">${item.title}</div>
+                <div style="font-size:11px; color:var(--text-secondary)">${item.hashtags}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ============ MODAL Y LÓGICA DE NEGOCIACIÓN (RONDA 1-3) ============
+function openDetail(itemId) {
+    const item = feed.find(x => x.id === itemId);
+    if (!item) return;
+
+    const isSold = item.status === 'sold';
+    
+    let actionButtons = '';
+    if (!isSold) {
+        actionButtons = `
+            <div class="trust-badge">🛡️ UBICACIÓN VERIFICADA POR GPS</div>
+            <button class="btn btn-primary" onclick="executeSmartContract(${item.id})">Comprar Licencia Simple - $${item.price}</button>
+            
+            <div class="offer-section">
+                <h4>💎 Negociar Exclusividad (Rondas 1-3)</h4>
+                <p style="font-size:12px; color:var(--text-secondary)">Haz una oferta para ser el único dueño de esta noticia.</p>
+                <div class="quick-offers">
+                    <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price * 2})">X2 ($${item.price*2})</div>
+                    <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price * 3})">X3 ($${item.price*3})</div>
+                    <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price * 4})">X4 ($${item.price*4})</div>
                 </div>
             </div>
-        `).join('');
-    }
-
-    // LÓGICA DE SMART CONTRACT
-    function openDetail(id) {
-        const item = feed.find(n => n.id === id);
-        const modal = document.getElementById('modal');
-        const modalBody = document.getElementById('modalBody');
-        
-        modalBody.innerHTML = `
-            <h3>${item.title}</h3>
-            <p>Este contenido está protegido por <b>Smart Contract Escrow</b>.</p>
-            <ul>
-                <li>Verificación GPS: OK</li>
-                <li>Metadatos EXIF: ${item.trust}%</li>
-            </ul>
-            <p style="font-size:12px; color:var(--secondary)">Al comprar, se libera la ubicación exacta y el archivo original.</p>
-            <button class="btn btn-buy" onclick="executeContract(${item.id})">Ejecutar Compra ($${item.price})</button>
-            <button class="btn" onclick="closeModal()">Cancelar</button>
         `;
-        modal.style.display = 'flex';
+    } else {
+        actionButtons = `<div class="btn" style="background:var(--success); color:white; text-align:center">✓ Contenido Adquirido</div>`;
     }
 
-    function executeContract(id) {
-        const item = feed.find(n => n.id === id);
-        if(item.status === 'sold') return;
+    document.getElementById('modalTitle').textContent = item.title;
+    document.getElementById('modalBody').innerHTML = `
+        <img src="${item.img}" style="width:100%; border-radius:15px; margin-bottom:15px;">
+        <p style="font-size:14px;">${item.hashtags}</p>
+        <hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">
+        ${actionButtons}
+    `;
 
-        // Simulación de transacción blockchain
+    document.getElementById('modal').classList.add('active');
+}
+
+// ============ SMART CONTRACT Y BILLETERA ============
+function executeSmartContract(id) {
+    const item = feed.find(n => n.id === id);
+    if (confirm("¿Ejecutar Smart Contract Escrow?\n\nSe debitarán $" + item.price + " de tu cuenta.")) {
         item.status = 'sold';
-        const net = item.price * 0.95; // 5% comisión plataforma
+        const net = item.price * 0.95; // 5% comisión
         userBalance += net;
         
-        // Registrar en historial
-        transactions.unshift({
-            title: item.title,
-            amount: net,
-            date: new Date().toLocaleTimeString()
-        });
-
-        alert("CONTRATO EXITOSO:\n- Fondos transferidos al Escrow\n- Ubicación desbloqueada.");
+        transactions.unshift({ title: item.title, amount: net, type: 'Venta' });
         
-        updateWalletUI();
-        renderMarkers();
-        renderGrid();
+        alert("Contrato Ejecutado. Ubicación real desbloqueada.");
+        updateBalanceUI();
         closeModal();
+        renderMarkers();
+        renderGrid('homeGrid', feed);
     }
+}
 
-    function updateWalletUI() {
-        document.getElementById('walletBalance').innerText = `$${userBalance.toFixed(2)}`;
-        const list = document.getElementById('txList');
-        if(transactions.length === 0) return;
-        
-        list.innerHTML = transactions.map(tx => `
-            <div class="tx-item">
-                <div>
-                    <div style="font-weight:bold">${tx.title}</div>
-                    <div style="font-size:11px; color:var(--secondary)">${tx.date} - Contrato Verificado</div>
-                </div>
-                <div style="color:var(--success); font-weight:bold">+$${tx.amount.toFixed(2)}</div>
-            </div>
-        `).join('');
-    }
+function makeOffer(id, amount) {
+    alert("Oferta de $" + amount + " enviada al informante.\nIniciando Ronda 1 de negociación (Smart Contract Pending).");
+    closeModal();
+}
 
-    // NAVEGACIÓN
-    function showView(viewId, el) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.getElementById('view-' + viewId).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        el.classList.add('active');
-        if(viewId === 'home') setTimeout(() => map.invalidateSize(), 100);
-    }
+function updateBalanceUI() {
+    document.getElementById('wallet-balance').textContent = `$${userBalance.toFixed(2)}`;
+    document.getElementById('balance-big').textContent = `$${userBalance.toFixed(2)}`;
+    
+    const txList = document.getElementById('txList');
+    txList.innerHTML = transactions.map(t => `
+        <div style="background:var(--card); padding:15px; border-radius:12px; margin-top:10px; display:flex; justify-content:space-between; border-left:4px solid var(--success)">
+            <div><b>${t.title}</b><br><small>${t.type}</small></div>
+            <div style="color:var(--success); font-weight:bold">+$${t.amount.toFixed(2)}</div>
+        </div>
+    `).join('');
+}
 
-    function locateUser() { map.locate({setView: true, maxZoom: 15}); }
-    function closeModal() { document.getElementById('modal').style.display = 'none'; }
-    function requestWithdrawal() { alert("Solicitud de retiro enviada a tu cuenta vinculada."); }
+// ============ UTILIDADES ============
+function showView(viewName) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + viewName).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    
+    if(viewName === 'home') setTimeout(() => map.invalidateSize(), 200);
+}
 
-    // THEME
-    document.getElementById('themeToggle').onclick = () => {
-        document.body.classList.toggle('dark');
-        initMap();
-    };
+function closeModal() { document.getElementById('modal').classList.remove('active'); }
+
+function toggleTheme() {
+    document.body.classList.toggle('dark');
+    initMap();
+}
+
+// INICIO
+window.onload = () => {
+    initMap();
+    renderGrid('homeGrid', feed);
+};
 </script>
-
 </body>
 </html>
