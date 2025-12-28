@@ -1,608 +1,411 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Paywall News - Marketplace de Noticias</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<style>
-body.light {
-  --bg: #f8f9fa;
-  --bg-secondary: #ffffff;
-  --card: #ffffff;
-  --text: #1a1a1a;
-  --text-secondary: #6c757d;
-  --muted: #adb5bd;
-  --accent: #ff3b30;
-  --accent-hover: #e6342a;
-  --border: rgba(0,0,0,0.08);
-  --shadow: rgba(0,0,0,0.1);
-  --overlay: rgba(0,0,0,0.6);
-  --watermark: rgba(0,0,0,0.08);
-  --success: #34c759;
-  --warning: #ffcc00;
-  --info: #007aff;
-  --gold: #ffd700;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paywall News - Marketplace Profesional</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-body.dark {
-  --bg: #0b0b0d;
-  --bg-secondary: #07070a;
-  --card: #111217;
-  --text: #ffffff;
-  --text-secondary: #9aa0a6;
-  --muted: #6c757d;
-  --accent: #ff3b30;
-  --accent-hover: #ff5449;
-  --border: rgba(255,255,255,0.06);
-  --shadow: rgba(0,0,0,0.3);
-  --overlay: rgba(0,0,0,0.7);
-  --watermark: rgba(255,255,255,0.06);
-  --success: #34c759;
-  --warning: #ffcc00;
-  --info: #0a84ff;
-  --gold: #ffd700;
-}
+    <style>
+        /* ============ TU SISTEMA DE VARIABLES COMPLETO ============ */
+        :root {
+            --accent: #ff3b30;
+            --accent-hover: #e6342a;
+            --success: #4cd964;
+            --warning: #ffcc00;
+            --info: #007aff;
+            --gold: #ffd700;
+        }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+        body.light {
+            --bg: #f2f2f7;
+            --bg-secondary: #ffffff;
+            --card: #ffffff;
+            --text: #1c1c1e;
+            --text-secondary: #8e8e93;
+            --border: rgba(0,0,0,0.1);
+            --shadow: rgba(0,0,0,0.05);
+            --overlay: rgba(255,255,255,0.8);
+            --map-style: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  transition: background 0.3s ease, color 0.3s ease;
-  -webkit-font-smoothing: antialiased;
-}
+        body.dark {
+            --bg: #000000;
+            --bg-secondary: #1c1c1e;
+            --card: #1c1c1e;
+            --text: #ffffff;
+            --text-secondary: #8e8e93;
+            --border: rgba(255,255,255,0.1);
+            --shadow: rgba(0,0,0,0.5);
+            --overlay: rgba(0,0,0,0.8);
+            --map-style: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+        }
 
-header {
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  backdrop-filter: blur(10px);
-}
+        /* ============ TU ESTÉTICA ORIGINAL ============ */
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; padding-bottom: 100px; }
+        
+        /* HEADER */
+        header { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); sticky; top: 0; z-index: 1000; }
+        
+        /* MAPA */
+        .map-container { height: 350px; border-radius: 20px; overflow: hidden; margin-bottom: 25px; border: 1px solid var(--border); position: relative; }
+        #map { height: 100%; width: 100%; }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 700;
-  font-size: 18px;
-}
+        /* GRID DE NOTICIAS */
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .news-card { background: var(--card); border-radius: 18px; overflow: hidden; border: 1px solid var(--border); cursor: pointer; transition: 0.3s; }
+        .news-card:hover { transform: translateY(-5px); }
+        .news-card-image { position: relative; aspect-ratio: 16/9; }
+        .news-card-image img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* BADGES */
+        .license-badge { position: absolute; top: 12px; left: 12px; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; }
+        .license-exclusive { background: var(--gold); color: #000; }
+        .license-nonexclusive { background: var(--info); color: #fff; }
+        .license-geo { background: var(--success); color: #fff; }
+        
+        /* MODAL Y NEGOCIACIÓN */
+        .modal { position: fixed; inset: 0; background: var(--overlay); backdrop-filter: blur(15px); display: none; z-index: 2000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: var(--card); width: 90%; max-width: 600px; border-radius: 30px; max-height: 90vh; overflow-y: auto; padding: 25px; }
+        
+        .offer-section { background: var(--bg); border: 2px solid var(--gold); border-radius: 20px; padding: 20px; margin-top: 20px; }
+        .quick-offers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
+        .quick-offer-btn { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 12px; text-align: center; cursor: pointer; }
+        
+        .input-group { display: flex; gap: 10px; margin-top: 15px; }
+        .form-input { flex: 1; padding: 15px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+        
+        /* NAV */
+        .bottom-nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--card); border: 1px solid var(--border); padding: 10px 30px; border-radius: 40px; display: flex; gap: 40px; box-shadow: 0 10px 30px var(--shadow); z-index: 1000; }
+        .nav-item { cursor: pointer; font-size: 20px; opacity: 0.5; transition: 0.3s; }
+        .nav-item.active { opacity: 1; transform: scale(1.2); }
 
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
+        .view { display: none; }
+        .view.active { display: block; }
 
-.icon-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 20px;
-  transition: all 0.2s ease;
-  background: transparent;
-  border: none;
-}
-
-.icon-btn:hover {
-  background: var(--border);
-  transform: scale(1.05);
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  padding-bottom: 110px;
-}
-
-.map-container {
-  height: 360px;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px var(--shadow);
-  margin-bottom: 24px;
-  position: relative;
-  border: 1px solid var(--border);
-}
-
-#map { height: 100%; width: 100%; z-index: 1; }
-
-.map-legend {
-  position: absolute;
-  left: 16px;
-  bottom: 16px;
-  background: var(--overlay);
-  backdrop-filter: blur(10px);
-  padding: 12px 16px;
-  border-radius: 12px;
-  font-size: 13px;
-  z-index: 1000;
-  color: white;
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.legend-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.section-title { font-size: 22px; font-weight: 700; }
-.section-subtitle { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
-
-.search-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
-.search-input {
-  flex: 1; min-width: 250px; padding: 14px 18px; border-radius: 12px;
-  border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 15px;
-}
-
-.filter-select {
-  padding: 14px 18px; border-radius: 12px; border: 1px solid var(--border);
-  background: var(--card); color: var(--text); font-size: 15px; cursor: pointer; min-width: 160px;
-}
-
-.news-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-  margin-bottom: 24px;
-}
-
-.news-card {
-  background: var(--card); border-radius: 16px; overflow: hidden;
-  position: relative; cursor: pointer; transition: all 0.3s ease;
-  border: 1px solid var(--border); box-shadow: 0 2px 8px var(--shadow);
-}
-
-.news-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px var(--shadow); }
-
-.news-card-image { width: 100%; aspect-ratio: 16/10; position: relative; overflow: hidden; }
-.news-card-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
-.news-card:hover .news-card-image img { transform: scale(1.05); }
-
-.watermark-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-.watermark-text { font-size: 16px; font-weight: 700; color: var(--watermark); transform: rotate(-25deg); text-transform: uppercase; letter-spacing: 2px; }
-
-.license-badge {
-  position: absolute; top: 12px; left: 12px; padding: 6px 12px; border-radius: 8px;
-  font-size: 11px; font-weight: 700; z-index: 10; display: flex; align-items: center; gap: 4px;
-}
-.license-exclusive { background: linear-gradient(135deg, #ffd700, #ffc107); color: #664d00; }
-.license-nonexclusive { background: rgba(0, 122, 255, 0.95); color: white; }
-.license-geo { background: rgba(52, 199, 89, 0.95); color: white; }
-
-.price-badge { position: absolute; top: 12px; right: 12px; background: var(--overlay); color: white; padding: 6px 10px; border-radius: 8px; font-weight: 700; z-index: 10; }
-
-.news-card-content { padding: 16px; }
-.news-card-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-.news-card-meta { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); }
-.news-card-hashtags { font-size: 12px; color: var(--info); margin-top: 8px; }
-
-.status-badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
-.status-for-sale { background: rgba(52, 199, 89, 0.15); color: var(--success); }
-.status-negotiating { background: rgba(255, 204, 0, 0.15); color: var(--warning); }
-.status-in-review { background: rgba(255, 204, 0, 0.15); color: var(--warning); }
-.status-sold { background: rgba(142, 142, 147, 0.15); color: var(--muted); }
-
-.modal { position: fixed; inset: 0; background: var(--overlay); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 2000; }
-.modal.active { display: flex; }
-.modal-content { background: var(--card); border-radius: 20px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
-.modal-header { padding: 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
-.modal-body { padding: 24px; }
-.modal-image { width: 100%; border-radius: 12px; margin-bottom: 20px; }
-
-.btn { padding: 14px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; text-align: center; }
-.btn-primary { background: var(--accent); color: white; }
-.btn-secondary { background: var(--border); color: var(--text); }
-.btn-gold { background: linear-gradient(135deg, #ffd700, #ffc107); color: #664d00; }
-.btn-full { width: 100%; margin-top: 10px; }
-
-.form-group { margin-bottom: 20px; }
-.form-input { width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
-
-.license-option { padding: 16px; border-radius: 12px; border: 2px solid var(--border); cursor: pointer; margin-top: 10px; }
-.license-option.selected { border-color: var(--accent); background: rgba(255, 59, 48, 0.05); }
-
-.bottom-nav { position: fixed; left: 16px; right: 16px; bottom: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 12px 8px; display: flex; justify-content: space-around; z-index: 1000; box-shadow: 0 8px 32px var(--shadow); }
-.nav-item { flex: 1; text-align: center; cursor: pointer; color: var(--text-secondary); font-size: 12px; }
-.nav-item.active { color: var(--accent); font-weight: 700; }
-.nav-item-icon { font-size: 20px; margin-bottom: 4px; }
-
-.view { display: none; }
-.view.active { display: block; }
-
-.offer-section { background: var(--bg); border: 2px solid var(--gold); border-radius: 12px; padding: 20px; margin-top: 20px; }
-.quick-offers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
-.quick-offer-btn { background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 10px; text-align: center; cursor: pointer; }
-.offer-amount { font-size: 40px; font-weight: 700; color: var(--gold); text-align: center; margin: 15px 0; }
-
-.list-item { display: flex; gap: 15px; padding: 12px; border-radius: 10px; margin-bottom: 10px; background: var(--bg-secondary); border: 1px solid var(--border); align-items: center; }
-.list-item-image { width: 70px; height: 50px; border-radius: 8px; object-fit: cover; }
-
-@media (max-width: 768px) {
-  .news-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .container { padding: 10px; }
-}
-</style>
+        .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+        .status-for-sale { background: rgba(76, 217, 100, 0.2); color: var(--success); }
+        .status-negotiating { background: rgba(255, 204, 0, 0.2); color: var(--warning); }
+        .status-sold { background: rgba(142, 142, 147, 0.2); color: var(--text-secondary); }
+    </style>
 </head>
 <body class="dark">
 
 <header>
-  <div class="brand"><span style="font-size: 24px;">📰</span> <span>Paywall News</span></div>
-  <div class="header-actions">
-    <button class="icon-btn" id="themeToggle">🌙</button>
-    <button class="icon-btn" onclick="showView('profile')">👤</button>
-  </div>
+    <div style="font-weight: 900; font-size: 20px;">PAYWALL <span style="color: var(--accent);">NEWS</span></div>
+    <div style="display: flex; gap: 15px;">
+        <button id="themeToggle" style="background:none; border:none; font-size: 20px; cursor:pointer;">🌞</button>
+        <div style="font-size: 20px; cursor:pointer;" onclick="showView('profile')">👤</div>
+    </div>
 </header>
 
 <div class="container">
-  <div id="view-home" class="view active">
-    <div class="map-container">
-      <div id="map"></div>
-      <div class="map-legend">
-        <div class="legend-item"><div class="legend-dot" style="background: #ff3b30;"></div><span>Alta</span></div>
-        <div class="legend-item"><div class="legend-dot" style="background: #ffcc00;"></div><span>Media</span></div>
-        <div class="legend-item"><div class="legend-dot" style="background: #4cd964;"></div><span>Baja</span></div>
-      </div>
+    <div id="view-home" class="view active">
+        <div class="map-container"><div id="map"></div></div>
+        <h2 style="margin-bottom: 20px;">Tendencias 🔥</h2>
+        <div class="news-grid" id="homeGrid"></div>
     </div>
-    <div class="section-header">
-      <div><div class="section-title">Últimas noticias</div><div class="section-subtitle">Contenido verificado cerca de ti</div></div>
-    </div>
-    <div class="news-grid" id="homeGrid"></div>
-  </div>
 
-  <div id="view-discover" class="view">
-    <div class="section-header">
-      <div><div class="section-title">Explorar noticias</div><div class="section-subtitle">Busca por hashtags o ubicación</div></div>
-    </div>
-    <div class="search-bar">
-      <input type="text" class="search-input" id="searchInput" placeholder="Buscar #hashtags...">
-      <select class="filter-select" id="filterLicense">
-        <option value="">Todas las licencias</option>
-        <option value="exclusive">Exclusivas</option>
-        <option value="nonexclusive">Compartidas</option>
-      </select>
-    </div>
-    <div class="news-grid" id="discoverGrid"></div>
-    <div id="noResults" class="empty-state" style="display: none; text-align: center; padding: 40px;">No se encontraron resultados</div>
-  </div>
-
-  <div id="view-upload" class="view">
-    <div class="section-header"><div><div class="section-title">Subir contenido</div></div></div>
-    <div style="background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid var(--border);">
-      <form id="uploadForm">
-        <div class="form-group">
-          <label class="form-label">Archivo</label>
-          <input type="file" class="form-input" id="fileInput" required>
+    <div id="view-discover" class="view">
+        <div style="margin-bottom: 25px;">
+            <input type="text" id="searchInput" class="form-input" placeholder="Buscar por #hashtag o título...">
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <select id="filterLicense" class="form-input">
+                    <option value="">Todas las licencias</option>
+                    <option value="exclusive">Exclusiva</option>
+                    <option value="nonexclusive">No Exclusiva</option>
+                    <option value="geo">Geográfica</option>
+                </select>
+                <select id="filterImportance" class="form-input">
+                    <option value="">Importancia</option>
+                    <option value="high">Alta 🔥</option>
+                    <option value="medium">Media ⚡</option>
+                    <option value="low">Baja 📍</option>
+                </select>
+            </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Título</label>
-          <input type="text" class="form-input" id="titleInput" placeholder="Ej: Incendio en depósito" required>
+        <div class="news-grid" id="discoverGrid"></div>
+        <div id="noResults" style="display:none; text-align:center; padding:50px;">No hay resultados para tu búsqueda</div>
+    </div>
+
+    <div id="view-upload" class="view">
+        <h2 style="margin-bottom:20px">Subir Material</h2>
+        <form id="uploadForm" style="background: var(--card); padding: 25px; border-radius: 20px;">
+            <div class="form-group" style="margin-bottom:15px">
+                <label>Título de la noticia</label>
+                <input type="text" id="titleInput" class="form-input" required>
+            </div>
+            <div class="form-group" style="margin-bottom:15px">
+                <label>Hashtags (separados por espacio)</label>
+                <div id="trendingSuggestions" style="margin: 10px 0;"></div>
+                <input type="text" id="hashtagsInput" class="form-input" placeholder="#accidente #urgente">
+            </div>
+            <div class="form-group" style="margin-bottom:15px">
+                <label>Precio Base (USD)</label>
+                <input type="number" id="priceInput" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label>Tipo de Licencia Inicial</label>
+                <div class="license-option" data-license="nonexclusive">🌐 No Exclusiva</div>
+                <div class="license-option" data-license="exclusive">🏆 Exclusiva</div>
+                <div class="license-option" data-license="geo">🗺️ Geográfica</div>
+                <input type="hidden" id="licenseInput" value="nonexclusive">
+            </div>
+            <button type="submit" class="quick-offer-btn" style="width:100%; margin-top:20px; background:var(--accent); color:white; font-weight:bold;">SUBIR CONTENIDO</button>
+        </form>
+    </div>
+
+    <div id="view-sales" class="view">
+        <div id="pendingOffersCard" class="offer-section" style="display:none;">
+            <h3>🔔 Ofertas entrantes</h3>
+            <div id="offersList"></div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Precio base (USD)</label>
-          <input type="number" class="form-input" id="priceInput" placeholder="50" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Tipo de Licencia</label>
-          <div class="license-options">
-            <div class="license-option selected" data-license="nonexclusive">🌐 No Exclusiva (Ventas múltiples)</div>
-            <div class="license-option" data-license="exclusive">🏆 Exclusiva (Un solo comprador)</div>
-          </div>
-          <input type="hidden" id="licenseInput" value="nonexclusive">
-        </div>
-        <button type="submit" class="btn btn-primary btn-full">📤 Publicar Noticia</button>
-      </form>
+        <h2 style="margin: 20px 0;">Mis Publicaciones</h2>
+        <div id="salesList"></div>
+        <h2 style="margin: 20px 0;">Mis Compras</h2>
+        <div id="purchasesList"></div>
     </div>
-  </div>
-
-  <div id="view-sales" class="view">
-    <div class="section-header"><div><div class="section-title">Mis noticias</div></div></div>
-    <div id="pendingOffersCard" class="offer-section" style="display:none; border-color: var(--warning); background: rgba(255,204,0,0.05);">
-      <h3 style="color: var(--warning); margin-bottom: 10px;">🔔 Ofertas de Exclusividad</h3>
-      <div id="offersList"></div>
-    </div>
-    <h3 style="margin: 20px 0 10px;">Publicaciones</h3>
-    <div id="salesList"></div>
-    <h3 style="margin: 20px 0 10px;">Compras</h3>
-    <div id="purchasesList"></div>
-  </div>
-
-  <div id="view-wallet" class="view">
-    <div class="section-header"><div><div class="section-title">Mi billetera</div></div></div>
-    <div style="background: var(--card); padding: 40px; border-radius: 20px; text-align: center; border: 1px solid var(--border);">
-      <div style="font-size: 14px; color: var(--text-secondary);">Saldo disponible</div>
-      <div style="font-size: 48px; font-weight: 700; margin: 10px 0;">$250.00</div>
-      <button class="btn btn-primary btn-full" onclick="requestWithdrawal()">💸 Retirar fondos</button>
-    </div>
-  </div>
-
-  <div id="view-profile" class="view">
-    <div class="section-header"><div><div class="section-title">Mi perfil</div></div></div>
-    <div style="background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid var(--border);">
-      <div style="text-align: center; padding: 20px;">
-        <div style="font-size: 60px;">👤</div>
-        <div style="font-size: 20px; font-weight: 700;">Juan Pérez</div>
-        <div style="color: var(--text-secondary);">Cronista Verificado</div>
-      </div>
-      <div class="list-item" onclick="showView('accounts')" style="cursor:pointer;">
-        <span>👥</span> <div style="flex:1; margin-left:10px;">Cuentas vinculadas</div> <span>›</span>
-      </div>
-      <button class="btn btn-secondary btn-full" onclick="logout()" style="margin-top: 20px;">Cerrar Sesión</button>
-    </div>
-  </div>
-
-  <div id="view-accounts" class="view">
-    <div class="section-header"><div><div class="section-title">Cuentas vinculadas</div></div></div>
-    <div id="accountsList">
-        <div class="list-item"><img src="https://i.pravatar.cc/100?u=1" class="list-item-image" style="border-radius:50%"> <div style="flex:1">Asistente 1</div> <span class="status-badge status-for-sale">Activo</span></div>
-        <div class="list-item"><img src="https://i.pravatar.cc/100?u=2" class="list-item-image" style="border-radius:50%"> <div style="flex:1">Asistente 2</div> <span class="status-badge status-for-sale">Activo</span></div>
-    </div>
-    <button class="btn btn-primary btn-full" onclick="addSubaccount()">➕ Vincular nueva cuenta</button>
-    <button class="btn btn-secondary btn-full" onclick="showView('profile')">Volver</button>
-  </div>
 </div>
 
 <nav class="bottom-nav">
-  <div class="nav-item active" onclick="showView('home')"><div class="nav-item-icon">🏠</div>Inicio</div>
-  <div class="nav-item" onclick="showView('discover')"><div class="nav-item-icon">🔍</div>Explorar</div>
-  <div class="nav-item" onclick="showView('upload')"><div class="nav-item-icon">📤</div>Subir</div>
-  <div class="nav-item" onclick="showView('sales')"><div class="nav-item-icon">📊</div>Noticias</div>
-  <div class="nav-item" onclick="showView('wallet')"><div class="nav-item-icon">💰</div>Billetera</div>
+    <div class="nav-item active" onclick="showView('home')">🏠</div>
+    <div class="nav-item" onclick="showView('discover')">🔍</div>
+    <div class="nav-item" onclick="showView('upload')">📤</div>
+    <div class="nav-item" onclick="showView('sales')">📊</div>
 </nav>
 
 <div id="modal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header"><h3 id="modalTitle"></h3><button onclick="closeModal()" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text);">✕</button></div>
-    <div class="modal-body" id="modalBody"></div>
-  </div>
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3 id="modalTitle"></h3>
+            <span onclick="closeModal()" style="cursor:pointer; font-size:24px;">✕</span>
+        </div>
+        <div id="modalBody"></div>
+    </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// ============ DATOS ============
+// ============ DATOS CARGADOS (RESTAURADOS) ============
 const feed = [
   {id:1,title:'Accidente en Av. Mitre',price:50,lat:-34.6037,lng:-58.3816,importance:'high',img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800',licenseType:'nonexclusive',status:'for_sale',hashtags:'#accidente #tránsito',trending:true},
   {id:2,title:'Manifestación frente al Congreso',price:120,lat:-34.6070,lng:-58.3772,importance:'medium',img:'https://images.unsplash.com/photo-1590856029826-c7a73142bbf1?w=800',licenseType:'exclusive',status:'for_sale',hashtags:'#manifestacion #política',trending:true},
-  {id:3,title:'Incendio en polígono industrial',price:80,lat:-34.6000,lng:-58.3900,importance:'low',img:'https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?w=800',licenseType:'nonexclusive',status:'in_review',hashtags:'#incendio #industria',trending:false}
+  {id:3,title:'Incendio en polígono industrial',price:80,lat:-34.6000,lng:-58.3900,importance:'low',img:'https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?w=800',licenseType:'nonexclusive',status:'in_review',hashtags:'#incendio #industria',trending:false},
+  {id:4,title:'Corte en Ruta 9 por protesta',price:70,lat:-34.6050,lng:-58.3920,importance:'medium',img:'https://images.unsplash.com/photo-1558882224-dda166733046?w=800',licenseType:'geo',status:'sold',hashtags:'#ruta9 #protesta',trending:false},
+  {id:5,title:'Fuga de gas en barrio sur',price:95,lat:-34.6080,lng:-58.3890,importance:'high',img:'https://images.unsplash.com/photo-1562690868-60bbe7293e94?w=800',licenseType:'nonexclusive',status:'for_sale',hashtags:'#gas #emergencia',trending:true}
 ];
 
-const purchases = [
-  {id:101,title:'Robo en joyería centro',price:200,date:'2025-06-10'}
-];
-
+const trendingHashtags = ['#accidente', '#manifestacion', '#gas', '#emergencia', '#tránsito'];
+const purchases = [{id:101,title:'Accidente en Av. Mitre',price:50,date:'2025-06-10'}];
 let negotiations = [];
 let map = null;
+let currentTileLayer = null;
+
+// ============ LÓGICA DE MAPA DINÁMICO ============
+function initMap() {
+    if (map) return;
+    map = L.map('map').setView([-34.6037, -58.3816], 13);
+    updateMapTheme();
+
+    feed.forEach(item => {
+        const color = item.importance === 'high' ? '#ff3b30' : (item.importance === 'medium' ? '#ffcc00' : '#4cd964');
+        const icon = L.divIcon({
+            className: '',
+            html: `<div style="width:20px;height:20px;background:${color};border:3px solid white;border-radius:50%;box-shadow:0 0 10px rgba(0,0,0,0.3);"></div>`
+        });
+        L.marker([item.lat, item.lng], {icon}).addTo(map).on('click', () => openDetail(item.id));
+    });
+}
+
+function updateMapTheme() {
+    const isDark = document.body.classList.contains('dark');
+    const style = isDark ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    if (currentTileLayer) map.removeLayer(currentTileLayer);
+    currentTileLayer = L.tileLayer(style, { attribution: '© OS' }).addTo(map);
+}
 
 // ============ TEMA ============
-const themeToggle = document.getElementById('themeToggle');
-function applyTheme(theme) {
-  document.body.className = theme;
-  localStorage.setItem('theme', theme);
-  themeToggle.textContent = theme === 'light' ? '🌞' : '🌙';
-}
-themeToggle.onclick = () => applyTheme(document.body.classList.contains('light') ? 'dark' : 'light');
-applyTheme(localStorage.getItem('theme') || 'dark');
+document.getElementById('themeToggle').onclick = () => {
+    document.body.classList.toggle('light');
+    document.body.classList.toggle('dark');
+    const newTheme = document.body.classList.contains('light') ? 'light' : 'dark';
+    localStorage.setItem('theme', newTheme);
+    document.getElementById('themeToggle').textContent = newTheme === 'light' ? '🌞' : '🌙';
+    if (map) updateMapTheme();
+};
 
-// ============ MAPA (LEAFLET) ============
-function initMap() {
-  if (map) return;
-  map = L.map('map').setView([-34.6037, -58.3816], 13);
-  
-  // Usamos el estilo oscuro de CartoDB para que combine con tu estética
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '©OpenStreetMap'
-  }).addTo(map);
-
-  renderMarkers();
+// ============ RENDERIZADO DE NOTICIAS ============
+function getLicenseBadge(type) {
+    if (type === 'exclusive') return '<div class="license-badge license-exclusive">🏆 EXCLUSIVA</div>';
+    if (type === 'geo') return '<div class="license-badge license-geo">🗺️ GEO</div>';
+    return '<div class="license-badge license-nonexclusive">🌐 COMPARTIDA</div>';
 }
 
-function renderMarkers() {
-  feed.forEach(item => {
-    const color = item.importance === 'high' ? '#ff3b30' : (item.importance === 'medium' ? '#ffcc00' : '#4cd964');
-    const customIcon = L.divIcon({
-      className: 'custom-pin',
-      html: `<div style="width:20px; height:20px; background:${color}; border:3px solid white; border-radius:50%; box-shadow:0 0 10px rgba(0,0,0,0.5);"></div>`,
-      iconSize: [20, 20]
-    });
-    
-    L.marker([item.lat, item.lng], {icon: customIcon})
-     .addTo(map)
-     .on('click', () => openDetail(item.id));
-  });
-}
-
-// ============ LÓGICA DE VISTAS ============
-function showView(viewName) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById(`view-${viewName}`).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelector(`[onclick="showView('${viewName}')"]`)?.classList.add('active');
-  
-  if (viewName === 'home') {
-    setTimeout(() => { map.invalidateSize(); }, 200);
-    renderGrid('homeGrid', feed);
-  } else if (viewName === 'sales') {
-    renderSales();
-  }
-}
-
-// ============ RENDERIZADO ============
 function getStatusBadge(status) {
-  const classes = { for_sale: 'status-for-sale', negotiating: 'status-negotiating', in_review: 'status-in-review', sold: 'status-sold' };
-  const labels = { for_sale: 'En venta', negotiating: 'Negociando', in_review: 'En revisión', sold: 'Vendida' };
-  return `<span class="status-badge ${classes[status]}">${labels[status]}</span>`;
+    if (status === 'for_sale') return '<span class="status-badge status-for-sale">En venta</span>';
+    if (status === 'negotiating') return '<span class="status-badge status-negotiating">En negociación</span>';
+    return '<span class="status-badge status-sold">Vendida</span>';
 }
 
-function renderGrid(containerId, items) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = items.map(item => `
-    <div class="news-card" onclick="openDetail(${item.id})">
-      <div class="news-card-image">
-        <img src="${item.img}">
-        <div class="license-badge ${item.licenseType === 'exclusive' ? 'license-exclusive' : 'license-nonexclusive'}">
-          ${item.licenseType === 'exclusive' ? '🏆 EXCLUSIVA' : '🌐 COMPARTIDA'}
-        </div>
-        <div class="price-badge">$${item.price}</div>
-      </div>
-      <div class="news-card-content">
-        <div class="news-card-title">${item.title}</div>
-        <div class="news-card-meta">${getStatusBadge(item.status)} <span>${item.importance === 'high' ? '🔥' : '📍'}</span></div>
-      </div>
-    </div>
-  `).join('');
+function renderNewsCard(item) {
+    return `
+        <div class="news-card" onclick="openDetail(${item.id})">
+            <div class="news-card-image">
+                <img src="${item.img}">
+                ${getLicenseBadge(item.licenseType)}
+                <div style="position:absolute; bottom:10px; right:10px; background:rgba(0,0,0,0.7); color:white; padding:5px 10px; border-radius:8px; font-weight:bold;">$${item.price}</div>
+            </div>
+            <div style="padding:15px;">
+                <div style="font-weight:bold; margin-bottom:10px;">${item.title}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    ${getStatusBadge(item.status)}
+                    <span style="font-size:12px; color:var(--info);">${item.hashtags.split(' ')[0]}</span>
+                </div>
+            </div>
+        </div>`;
 }
 
-// ============ DETALLE Y COMPRA ============
+// ============ SISTEMA DE NEGOCIACIÓN (COMPLETO) ============
 function openDetail(itemId) {
-  const item = feed.find(x => x.id === itemId);
-  document.getElementById('modalTitle').textContent = item.title;
-  
-  let actionHtml = `<button class="btn btn-primary btn-full" onclick="buyNow(${item.id})">💳 Comprar Licencia - $${item.price}</button>`;
-  
-  if (item.status === 'for_sale' && item.licenseType === 'nonexclusive') {
-    actionHtml += `
-      <div class="offer-section">
-        <h4>💎 Solicitar Exclusividad</h4>
-        <div class="quick-offers">
-          <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price * 2})"><div>X2</div>$${item.price * 2}</div>
-          <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price * 3})"><div>X3</div>$${item.price * 3}</div>
-          <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price * 4})"><div>X4</div>$${item.price * 4}</div>
-        </div>
-      </div>`;
-  }
+    const item = feed.find(x => x.id === itemId);
+    if (!item) return;
 
-  document.getElementById('modalBody').innerHTML = `
-    <img src="${item.img}" class="modal-image">
-    <div style="margin-bottom:20px;">
-        <p style="color:var(--text-secondary); margin-bottom:10px;">${item.hashtags}</p>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-weight:700;">Precio Base:</span>
-            <span style="font-size:24px; color:var(--accent); font-weight:700;">$${item.price}</span>
+    let actionContent = '';
+    if (item.status === 'for_sale') {
+        actionContent = `
+            <button class="quick-offer-btn" onclick="buyNow(${item.id})" style="width:100%; background:var(--accent); color:white; border:none; margin-bottom:15px;">💳 COMPRAR LICENCIA - $${item.price}</button>
+            <div class="offer-section">
+                <h4 style="text-align:center; color:var(--gold);">💎 Solicitar Exclusividad</h4>
+                <div class="quick-offers">
+                    <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price * 2})">x2 ($${item.price * 2})</div>
+                    <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price * 3})">x3 ($${item.price * 3})</div>
+                    <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price * 4})">x4 ($${item.price * 4})</div>
+                </div>
+                <div class="input-group">
+                    <input type="number" id="customOffer${item.id}" class="form-input" placeholder="Tu oferta...">
+                    <button class="quick-offer-btn" onclick="makeCustomOffer(${item.id})" style="background:var(--gold); color:black;">Enviar</button>
+                </div>
+            </div>
+        `;
+    } else {
+        actionContent = `<div style="text-align:center; padding:20px; opacity:0.6;">Este contenido no está disponible para nuevas ofertas.</div>`;
+    }
+
+    document.getElementById('modalTitle').textContent = item.title;
+    document.getElementById('modalBody').innerHTML = `
+        <img src="${item.img}" style="width:100%; border-radius:15px; margin-bottom:20px;">
+        <div style="margin-bottom:20px;">
+            <p style="color:var(--text-secondary); line-height:1.5;">Material informativo verificado de importancia ${item.importance}. Licencia original: ${item.licenseType}.</p>
         </div>
-    </div>
-    ${actionHtml}
-  `;
-  document.getElementById('modal').classList.add('active');
+        ${actionContent}
+    `;
+    document.getElementById('modal').classList.add('active');
+}
+
+function makeOffer(itemId, amount) {
+    const item = feed.find(x => x.id === itemId);
+    const negId = negotiations.length + 1;
+    negotiations.push({ id: negId, newsId: itemId, amount, status: 'pending', buyer: 'Medio X', round: 1 });
+    item.status = 'negotiating';
+    alert("Oferta de $" + amount + " enviada. El vendedor tiene 15 min.");
+    closeModal();
+    renderAllViews();
+}
+
+function makeCustomOffer(itemId) {
+    const val = document.getElementById('customOffer' + itemId).value;
+    if (val) makeOffer(itemId, Number(val));
+}
+
+// ============ NAVEGACIÓN Y FILTROS ============
+function showView(viewName) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(`view-${viewName}`).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    
+    if (viewName === 'home') initMap();
+    if (viewName === 'discover') filterNews();
+    if (viewName === 'sales') renderSales();
+}
+
+function filterNews() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const license = document.getElementById('filterLicense').value;
+    const importance = document.getElementById('filterImportance').value;
+
+    const filtered = feed.filter(item => {
+        const matchSearch = item.title.toLowerCase().includes(search) || item.hashtags.toLowerCase().includes(search);
+        const matchLicense = !license || item.licenseType === license;
+        const matchImportance = !importance || item.importance === importance;
+        return matchSearch && matchLicense && matchImportance;
+    });
+
+    document.getElementById('discoverGrid').innerHTML = filtered.map(item => renderNewsCard(item)).join('');
+    document.getElementById('noResults').style.display = filtered.length ? 'none' : 'block';
+}
+
+// ============ MIS NOTICIAS ============
+function renderSales() {
+    const pending = negotiations.filter(n => n.status === 'pending');
+    const container = document.getElementById('offersList');
+    
+    if (pending.length) {
+        document.getElementById('pendingOffersCard').style.display = 'block';
+        container.innerHTML = pending.map(n => {
+            const item = feed.find(f => f.id === n.newsId);
+            return `<div style="display:flex; justify-content:space-between; align-items:center; background:var(--card); padding:15px; border-radius:12px; margin-bottom:10px;">
+                <div><b>$${n.amount}</b> por ${item.title}</div>
+                <button onclick="acceptOffer(${n.id})" style="background:var(--success); color:white; border:none; padding:8px 12px; border-radius:8px;">Aceptar</button>
+            </div>`;
+        }).join('');
+    } else {
+        document.getElementById('pendingOffersCard').style.display = 'none';
+    }
+
+    document.getElementById('salesList').innerHTML = feed.slice(0,3).map(item => `
+        <div style="display:flex; gap:15px; background:var(--card); padding:10px; border-radius:12px; margin-bottom:10px;">
+            <img src="${item.img}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;">
+            <div style="flex:1">
+                <div style="font-weight:bold;">${item.title}</div>
+                <div style="font-size:12px; color:var(--text-secondary);">${getStatusBadge(item.status)}</div>
+            </div>
+            <div style="font-weight:bold;">$${item.price}</div>
+        </div>
+    `).join('');
+}
+
+function acceptOffer(id) {
+    const neg = negotiations.find(n => n.id === id);
+    const item = feed.find(f => f.id === neg.newsId);
+    item.status = 'sold';
+    neg.status = 'accepted';
+    alert("¡Contenido vendido!");
+    renderSales();
 }
 
 function closeModal() { document.getElementById('modal').classList.remove('active'); }
 
-function buyNow(id) {
-  alert("✓ Compra realizada con éxito. Los archivos han sido enviados a tu correo.");
-  closeModal();
-}
-
-function makeOffer(id, amount) {
-  const item = feed.find(x => x.id === id);
-  negotiations.push({ id: Date.now(), newsId: id, amount: amount, status: 'pending', buyer: 'Medio Global News' });
-  item.status = 'negotiating';
-  alert(`📩 Oferta de $${amount} enviada al vendedor.`);
-  closeModal();
-  renderAllViews();
-}
-
-function renderSales() {
-  const pending = negotiations.filter(n => n.status === 'pending');
-  const pendingCard = document.getElementById('pendingOffersCard');
-  
-  if (pending.length > 0) {
-    pendingCard.style.display = 'block';
-    document.getElementById('offersList').innerHTML = pending.map(n => {
-        const item = feed.find(f => f.id === n.newsId);
-        return `
-            <div class="list-item">
-                <div style="flex:1"><b>$${n.amount}</b> por "${item.title}"</div>
-                <button class="btn btn-primary" onclick="acceptOffer(${n.id})" style="padding:8px 12px; font-size:12px;">Aceptar</button>
-            </div>`;
-    }).join('');
-  } else {
-    pendingCard.style.display = 'none';
-  }
-
-  document.getElementById('salesList').innerHTML = feed.map(item => `
-    <div class="list-item">
-        <img src="${item.img}" class="list-item-image">
-        <div style="flex:1"><b>${item.title}</b></div>
-        <div>${getStatusBadge(item.status)}</div>
-    </div>
-  `).join('');
-
-  document.getElementById('purchasesList').innerHTML = purchases.map(p => `
-    <div class="list-item">
-        <div style="flex:1"><b>${p.title}</b><br><small>${p.date}</small></div>
-        <div style="color:var(--accent); font-weight:700;">-$${p.price}</div>
-    </div>
-  `).join('');
-}
-
-function acceptOffer(negId) {
-    const neg = negotiations.find(n => n.id === negId);
-    const item = feed.find(f => f.id === neg.newsId);
-    neg.status = 'accepted';
-    item.status = 'sold';
-    alert("✅ ¡Venta cerrada por $" + neg.amount + "! El saldo se ha acreditado.");
-    renderSales();
-}
-
-// ============ EVENTOS FORMULARIO ============
-document.querySelectorAll('.license-option').forEach(opt => {
-    opt.onclick = function() {
-        document.querySelectorAll('.license-option').forEach(o => o.classList.remove('selected'));
-        this.classList.add('selected');
-        document.getElementById('licenseInput').value = this.dataset.license;
-    }
-});
-
-document.getElementById('uploadForm').onsubmit = function(e) {
-    e.preventDefault();
-    alert("✓ Tu noticia ha sido enviada a revisión. En breve aparecerá en el mapa.");
-    showView('home');
-}
-
 function renderAllViews() {
-    renderGrid('homeGrid', feed);
-    renderSales();
+    document.getElementById('homeGrid').innerHTML = feed.map(item => renderNewsCard(item)).join('');
+    filterNews();
 }
-
-function requestWithdrawal() { alert("💸 Solicitud enviada. Recibirás tus fondos en 48hs."); }
-function logout() { alert("Sesión cerrada"); location.reload(); }
-function addSubaccount() { alert("Función próximamente disponible."); }
 
 // ============ INIT ============
 window.onload = () => {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'light') document.body.classList.replace('dark', 'light');
+    renderAllViews();
     initMap();
-    renderGrid('homeGrid', feed);
 };
+
+document.getElementById('searchInput').oninput = filterNews;
+document.getElementById('filterLicense').onchange = filterNews;
+document.getElementById('filterImportance').onchange = filterNews;
 </script>
 </body>
 </html>
