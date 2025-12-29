@@ -3,12 +3,29 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Paywall News - Marketplace Profesional</title>
+<title>Paywall News - Marketplace de Noticias</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-/* ========== ESTILOS ORIGINALES ÍNTEGROS ========== */
-:root {
+body.light {
+  --bg: #f8f9fa;
+  --bg-secondary: #ffffff;
+  --card: #ffffff;
+  --text: #1a1a1a;
+  --text-secondary: #6c757d;
+  --muted: #adb5bd;
+  --accent: #ff3b30;
+  --accent-hover: #e6342a;
+  --border: rgba(0,0,0,0.08);
+  --shadow: rgba(0,0,0,0.1);
+  --overlay: rgba(0,0,0,0.6);
+  --watermark: rgba(0,0,0,0.08);
+  --success: #34c759;
+  --warning: #ffcc00;
+  --info: #007aff;
+  --gold: #ffd700;
+}
+
+body.dark {
   --bg: #0b0b0d;
   --bg-secondary: #07070a;
   --card: #111217;
@@ -20,430 +37,1836 @@
   --border: rgba(255,255,255,0.06);
   --shadow: rgba(0,0,0,0.3);
   --overlay: rgba(0,0,0,0.7);
-  --watermark: rgba(255,255,255,0.08);
+  --watermark: rgba(255,255,255,0.06);
   --success: #34c759;
   --warning: #ffcc00;
   --info: #0a84ff;
   --gold: #ffd700;
 }
 
-body.light {
-  --bg: #f8f9fa; --bg-secondary: #ffffff; --card: #ffffff;
-  --text: #1a1a1a; --text-secondary: #6c757d; --border: rgba(0,0,0,0.08);
-  --watermark: rgba(0,0,0,0.1);
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+header {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
 
-/* HEADER ORIGINAL */
-header { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 18px;
+}
 
-/* CONTENEDOR PRINCIPAL */
-.container { max-width: 1200px; margin: 0 auto; padding: 20px; padding-bottom: 110px; }
+.brand .logo {
+  max-height: 36px;
+  width: auto;
+  object-fit: contain;
+}
 
-/* MAPA Y COMPONENTES VISUALES */
-.map-container { height: 360px; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px var(--shadow); margin-bottom: 24px; position: relative; border: 1px solid var(--border); }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: none;
+}
+
+.icon-btn:hover {
+  background: var(--border);
+  transform: scale(1.05);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  padding-bottom: 110px;
+}
+
+.map-container {
+  height: 360px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px var(--shadow);
+  margin-bottom: 24px;
+  position: relative;
+  border: 1px solid var(--border);
+}
+
 #map { height: 100%; width: 100%; }
 
-/* GRID DE NOTICIAS */
-.news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-.news-card { background: var(--card); border-radius: 16px; overflow: hidden; position: relative; cursor: pointer; transition: 0.3s; border: 1px solid var(--border); }
-.news-card:hover { transform: translateY(-4px); }
+.map-legend {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  background: var(--overlay);
+  backdrop-filter: blur(10px);
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  z-index: 1000;
+  color: white;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
 
-/* MEJORA: MARCA DE AGUA (Invertida como pediste) */
-.watermark-overlay { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); pointer-events: none; z-index: 5; }
-.watermark-cell { display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-25deg); color: var(--watermark); }
-.wm-brand { font-size: 12px; font-weight: 900; text-transform: uppercase; }
-.wm-user { font-size: 8px; font-weight: 400; margin-top: 2px; }
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 
-/* BADGES ORIGINALES */
-.price-badge { position: absolute; top: 12px; right: 12px; background: var(--overlay); color: white; padding: 6px 10px; border-radius: 8px; font-weight: 700; z-index: 10; }
-.license-badge { position: absolute; top: 12px; left: 12px; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; z-index: 10; }
-.license-exclusive { background: linear-gradient(135deg, #ffd700, #ffc107); color: #664d00; }
-.license-nonexclusive { background: rgba(0, 122, 255, 0.95); color: white; }
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
 
-/* COMPONENTES DE VISTA VENTAS (Gráfico corregido) */
-.stats-container { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 24px; border: 1px solid var(--border); }
-.chart-wrapper { height: 180px; width: 100%; }
-.stats-tabs { display: flex; gap: 8px; background: var(--bg); padding: 4px; border-radius: 10px; }
-.tab-btn { padding: 6px 12px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 12px; font-weight: 600; }
-.tab-btn.active { background: var(--card); color: var(--accent); }
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
 
-/* ESTILOS DE SUBIR (RECUPERADOS) */
-.license-option { padding: 16px; border-radius: 12px; border: 2px solid var(--border); cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
-.license-option.selected { border-color: var(--accent); background: rgba(255, 59, 48, 0.05); }
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+}
 
-/* BOTTOM NAV Y NOTIF */
-.bottom-nav { position: fixed; left: 16px; right: 16px; bottom: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; display: flex; padding: 8px; z-index: 100; box-shadow: 0 8px 32px var(--shadow); }
-.nav-item { flex: 1; text-align: center; padding: 8px; cursor: pointer; font-size: 11px; color: var(--text-secondary); position: relative; }
-.nav-item.active { color: var(--accent); font-weight: 700; }
-.notif-badge { position: absolute; top: 4px; right: 30%; width: 10px; height: 10px; background: var(--accent); border-radius: 50%; display: none; }
-.notif-badge.active { display: block; animation: pulse 2s infinite; }
+.section-subtitle {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-top: 4px;
+}
 
-/* MODAL PROFESIONAL */
-.modal { position: fixed; inset: 0; background: var(--overlay); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 20px; }
-.modal.active { display: flex; }
-.modal-content { background: var(--card); border-radius: 20px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; }
+.search-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
 
-/* NEGOCIACIÓN */
-.offer-section { background: var(--bg); border: 2px solid var(--gold); border-radius: 12px; padding: 20px; margin-top: 15px; }
-.timer-box { background: rgba(255, 59, 48, 0.1); padding: 12px; border-radius: 10px; text-align: center; margin-bottom: 15px; border: 1px solid var(--accent); }
-.timer-countdown { font-family: monospace; font-size: 24px; font-weight: 700; color: var(--accent); }
+.search-input {
+  flex: 1;
+  min-width: 250px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
 
-@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.1);
+}
+
+.filter-select {
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 15px;
+  cursor: pointer;
+  min-width: 160px;
+}
+
+.news-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.news-card {
+  background: var(--card);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.news-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px var(--shadow);
+}
+
+.news-card-image {
+  width: 100%;
+  aspect-ratio: 16/10;
+  object-fit: cover;
+  position: relative;
+}
+
+.news-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.news-card:hover .news-card-image img {
+  transform: scale(1.05);
+}
+
+/* --- ESTÉTICA DE LA MARCA DE AGUA (Actualizado) --- */
+.watermark-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  pointer-events: none;
+  user-select: none;
+  overflow: hidden;
+  z-index: 5;
+}
+
+.watermark-text {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--watermark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-25deg);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  opacity: 0.6;
+}
+
+.license-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(10px);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.license-exclusive {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(255, 193, 7, 0.95));
+  color: #664d00;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+}
+
+.license-nonexclusive {
+  background: rgba(0, 122, 255, 0.95);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.4);
+}
+
+.license-geo {
+  background: rgba(52, 199, 89, 0.95);
+  color: white;
+  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.4);
+}
+
+.price-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--overlay);
+  backdrop-filter: blur(10px);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  z-index: 10;
+}
+
+.news-card-content {
+  padding: 16px;
+}
+
+.news-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.news-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.news-card-hashtags {
+  font-size: 12px;
+  color: var(--info);
+  margin-top: 8px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-for-sale {
+  background: rgba(52, 199, 89, 0.15);
+  color: var(--success);
+}
+
+.status-negotiating {
+  background: rgba(255, 204, 0, 0.15);
+  color: var(--warning);
+}
+
+.status-in-review {
+  background: rgba(255, 204, 0, 0.15);
+  color: var(--warning);
+}
+
+.status-sold {
+  background: rgba(142, 142, 147, 0.15);
+  color: var(--muted);
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 200;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal.active {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: var(--card);
+  border-radius: 20px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  padding: 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  flex: 1;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--border);
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: var(--accent);
+  color: white;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-image {
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.info-section {
+  background: var(--bg);
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.info-value {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.btn {
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  text-align: center;
+  display: inline-block;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.4);
+}
+
+.btn-secondary {
+  background: var(--border);
+  color: var(--text);
+}
+
+.btn-secondary:hover {
+  background: var(--muted);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, #ffd700, #ffc107);
+  color: #664d00;
+  font-weight: 700;
+}
+
+.btn-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+}
+
+.btn-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-help {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
+.license-options {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.license-option {
+  padding: 16px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.license-option:hover {
+  border-color: var(--accent);
+  background: var(--bg);
+}
+
+.license-option.selected {
+  border-color: var(--accent);
+  background: rgba(255, 59, 48, 0.05);
+}
+
+.license-option-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.license-option-title {
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.license-option-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.list-card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+}
+
+.list-item {
+  display: flex;
+  gap: 16px;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+}
+
+.list-item:hover {
+  background: var(--bg);
+}
+
+.list-item-image {
+  width: 80px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.list-item-content {
+  flex: 1;
+}
+
+.list-item-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.list-item-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.list-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 12px 8px;
+  display: flex;
+  justify-content: space-around;
+  box-shadow: 0 8px 32px var(--shadow);
+  z-index: 90;
+  backdrop-filter: blur(10px);
+}
+
+.nav-item {
+  flex: 1;
+  text-align: center;
+  padding: 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.nav-item:hover {
+  background: var(--bg);
+}
+
+.nav-item.active {
+  color: var(--accent);
+  background: rgba(255, 59, 48, 0.1);
+  font-weight: 700;
+}
+
+.nav-item-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.empty-state-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state-text {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}
+
+.pending-offers-card {
+  background: rgba(255, 204, 0, 0.1);
+  border: 2px solid var(--warning);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.pending-offers-card h3 {
+  margin-bottom: 12px;
+  color: var(--warning);
+}
+
+.offer-section {
+  background: var(--bg);
+  border: 2px solid var(--gold);
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 20px;
+}
+
+.offer-section h4 {
+  text-align: center;
+  color: var(--gold);
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.quick-offers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.quick-offer-btn {
+  background: var(--card);
+  border: 2px solid var(--border);
+  padding: 16px 8px;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quick-offer-btn:hover {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+}
+
+.quick-offer-btn div:first-child {
+  font-weight: 700;
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.quick-offer-btn div:last-child {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.input-group {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.helper-text {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 12px;
+}
+
+.offer-highlight {
+  background: var(--bg);
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.offer-amount {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--gold);
+  margin: 16px 0;
+}
+
+.timer-box {
+  background: rgba(255, 204, 0, 0.1);
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+@media (max-width: 768px) {
+  .news-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  
+  .map-container {
+    height: 280px;
+  }
+  
+  .search-bar {
+    flex-direction: column;
+  }
+  
+  .search-input,
+  .filter-select {
+    width: 100%;
+  }
+  
+  .btn-group {
+    flex-direction: column;
+  }
+}
 </style>
 </head>
-<body>
+<body class="dark">
 
 <header>
-  <div class="brand">📰 Paywall News</div>
-  <div style="display:flex; gap:15px">
-    <button id="themeToggle" style="background:none; border:none; cursor:pointer; font-size:20px">🌙</button>
-    <button onclick="showView('profile')" style="background:none; border:none; cursor:pointer; font-size:20px">👤</button>
+  <div class="brand">
+    <span style="font-size: 24px;">📰</span>
+    <span>Paywall News</span>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" id="themeToggle">🌙</button>
+    <button class="icon-btn" onclick="showView('profile')">👤</button>
   </div>
 </header>
 
 <div class="container">
   
   <div id="view-home" class="view active">
-    <div class="map-container"><div id="map"></div></div>
-    <div class="section-header"><h2 class="section-title">Noticias en Tiempo Real</h2></div>
+    <div class="map-container">
+      <div id="map"></div>
+      <div class="map-legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background: #ff3b30;"></div>
+          <span>Alta</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background: #ffcc00;"></div>
+          <span>Media</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background: #4cd964;"></div>
+          <span>Baja</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div>
+        <div class="section-title">Últimas noticias</div>
+        <div class="section-subtitle">Contenido verificado cerca de ti</div>
+      </div>
+    </div>
+
     <div class="news-grid" id="homeGrid"></div>
   </div>
 
-  <div id="view-discover" class="view" style="display:none">
-    <h2 style="margin-bottom:15px">Explorar Mercado</h2>
-    <div style="margin-bottom:20px; display:grid; grid-template-columns: 1fr auto; gap:10px">
-        <input type="text" id="searchInput" placeholder="Buscar #hashtags, títulos..." style="padding:14px; border-radius:12px; border:1px solid var(--border); background:var(--card); color:var(--text)">
-        <button class="btn btn-secondary" onclick="alert('Modal filtros original')" style="width:auto">⚙️</button>
+  <div id="view-discover" class="view">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Explorar noticias</div>
+        <div class="section-subtitle">Busca por hashtags, ubicación o tipo</div>
+      </div>
     </div>
-    <div id="trendingHashtags" style="margin-bottom:20px; overflow-x:auto; white-space:nowrap"></div>
+
+    <div class="search-bar">
+      <input type="text" class="search-input" id="searchInput" placeholder="Buscar #hashtags, palabras clave...">
+      <select class="filter-select" id="filterLicense">
+        <option value="">Todas las licencias</option>
+        <option value="exclusive">Exclusivas</option>
+        <option value="nonexclusive">No exclusivas</option>
+        <option value="geo">Geográficas</option>
+      </select>
+      <select class="filter-select" id="filterImportance">
+        <option value="">Todas las prioridades</option>
+        <option value="high">Alta</option>
+        <option value="medium">Media</option>
+        <option value="low">Baja</option>
+      </select>
+    </div>
+
     <div class="news-grid" id="discoverGrid"></div>
-  </div>
-
-  <div id="view-upload" class="view" style="display:none">
-    <h2>Subir Nueva Noticia</h2>
-    <div class="stats-container" style="margin-top:20px">
-        <form id="uploadForm">
-            <div style="margin-bottom:15px">
-                <label>Título</label>
-                <input type="text" id="titleInput" class="form-input" style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text)">
-            </div>
-            <div style="margin-bottom:15px">
-                <label>Hashtags (Sugerencias 🔥: <span id="uploadTrendTags"></span>)</label>
-                <input type="text" id="hashtagsInput" style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text)">
-            </div>
-            <div style="margin-bottom:15px">
-                <label>Licencia</label>
-                <div class="license-option selected" onclick="selectLic(this, 'nonexclusive')">🌐 Compartida (Venta múltiple)</div>
-                <div class="license-option" onclick="selectLic(this, 'exclusive')">🏆 Exclusiva (Un solo dueño)</div>
-                <input type="hidden" id="licenseInput" value="nonexclusive">
-            </div>
-            <button type="submit" class="btn btn-primary">📤 Publicar Contenido</button>
-        </form>
-    </div>
-  </div>
-
-  <div id="view-sales" class="view" style="display:none">
-    <div class="stats-container">
-        <div style="display:flex; justify-content:space-between; align-items:center">
-            <strong>Rendimiento de Ventas</strong>
-            <div class="stats-tabs">
-                <button class="tab-btn active" onclick="updateChart('week', this)">Semana</button>
-                <button class="tab-btn" onclick="updateChart('month', this)">Mes</button>
-                <button class="tab-btn" onclick="updateChart('year', this)">Año</button>
-            </div>
-        </div>
-        <div class="chart-wrapper"><canvas id="earningsChart"></canvas></div>
-    </div>
-
-    <div id="pendingOffersCard" style="display:none; margin-bottom:20px; border:2px solid var(--warning); border-radius:16px; padding:20px">
-        <h3 style="color:var(--warning)">🔔 Ofertas de Compradores</h3>
-        <div id="offersList"></div>
-    </div>
-
-    <div class="stats-container">
-        <h3>Ventas Realizadas</h3>
-        <div id="salesList"></div>
-    </div>
     
-    <div class="stats-container">
-        <h3>Compras Realizadas</h3>
-        <div id="purchasesList"></div>
+    <div id="noResults" class="empty-state" style="display: none;">
+      <div class="empty-state-icon">🔍</div>
+      <div class="empty-state-text">No se encontraron resultados</div>
+      <div style="font-size: 14px;">Intenta con otros términos de búsqueda</div>
     </div>
   </div>
 
-  <div id="view-wallet" class="view" style="display:none">
-    <div class="stats-container" style="text-align:center; padding:40px">
-        <div style="font-size:14px; color:var(--text-secondary)">Saldo a favor</div>
-        <div id="walletBalance" style="font-size:48px; font-weight:800; margin:10px 0">$250.00</div>
-        <button class="btn btn-primary" onclick="alert('Retiro solicitado')">💸 Retirar Ganancias</button>
+  <div id="view-upload" class="view">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Subir contenido</div>
+        <div class="section-subtitle">Comparte tu noticia con el mundo</div>
+      </div>
+    </div>
+
+    <div class="list-card">
+      <form id="uploadForm">
+        <div class="form-group">
+          <label class="form-label">Archivo</label>
+          <input type="file" class="form-input" id="fileInput" accept="image/*,video/*" required>
+          <div class="form-help">Formatos: JPG, PNG, MP4 (máx. 50MB)</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Título de la noticia</label>
+          <input type="text" class="form-input" id="titleInput" placeholder="Ej: Accidente en Av. Mitre" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Hashtags</label>
+          <input type="text" class="form-input" id="hashtagsInput" placeholder="#accidente #tránsito #urgente">
+          <div class="form-help">
+            <strong>💡 Trending ahora:</strong> 
+            <span id="trendingSuggestions" style="color: var(--info); cursor: pointer;"></span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Precio (USD)</label>
+          <input type="number" class="form-input" id="priceInput" placeholder="50" min="1" required>
+          <div class="form-help">Precio base para licencia no exclusiva</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tipo de licencia</label>
+          <div class="license-options">
+            <div class="license-option" data-license="nonexclusive">
+              <div class="license-option-header">
+                <div class="license-option-title">
+                  🌐 No Exclusiva
+                </div>
+                <span style="color: var(--info); font-weight: 700;">Recomendado</span>
+              </div>
+              <div class="license-option-desc">
+                Otros medios pueden comprarla. Genera ingresos recurrentes.
+              </div>
+            </div>
+            
+            <div class="license-option" data-license="exclusive">
+              <div class="license-option-header">
+                <div class="license-option-title">
+                  🏆 Exclusiva
+                </div>
+                <span style="color: var(--gold); font-weight: 700;">Premium</span>
+              </div>
+              <div class="license-option-desc">
+                Un solo comprador. Precio más alto, se elimina tras la venta.
+              </div>
+            </div>
+            
+            <div class="license-option" data-license="geo">
+              <div class="license-option-header">
+                <div class="license-option-title">
+                  🗺️ Geográfica
+                </div>
+              </div>
+              <div class="license-option-desc">
+                Exclusiva por región. Puedes vender la misma noticia a múltiples países.
+              </div>
+            </div>
+          </div>
+          <input type="hidden" id="licenseInput" value="nonexclusive">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full">
+          📤 Subir contenido
+        </button>
+      </form>
     </div>
   </div>
 
-  <div id="view-profile" class="view" style="display:none">
-    <div class="stats-container" style="text-align:center">
-        <div style="font-size:60px">👤</div>
-        <h2 id="profileName">Juan Pérez</h2>
-        <p>Miembro Verificado ✓</p>
+  <div id="view-sales" class="view">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Mis noticias</div>
+        <div class="section-subtitle">Gestiona tu contenido y ventas</div>
+      </div>
     </div>
-    <div class="stats-container" onclick="showView('accounts')" style="cursor:pointer">
-        <h3>👥 Cuentas Vinculadas (Subcuentas)</h3>
-        <div id="subaccountsList" style="margin-top:15px"></div>
-    </div>
-  </div>
 
+    <div id="pendingOffersCard" class="pending-offers-card" style="display:none">
+<h3>🔔 Ofertas pendientes de respuesta</h3>
+<div id="offersList"></div>
+</div>
+<div class="list-card">
+  <h3 style="margin-bottom: 16px;">Mis ventas</h3>
+  <div id="salesList"></div>
 </div>
 
+<div class="list-card">
+  <h3 style="margin-bottom: 16px;">Mis compras</h3>
+  <div id="purchasesList"></div>
+</div>
+  </div>
+  <div id="view-wallet" class="view">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Mi billetera</div>
+        <div class="section-subtitle">Administra tus ganancias</div>
+      </div>
+    </div>
+<div class="list-card">
+  <div style="text-align: center; padding: 40px 20px;">
+    <div style="font-size: 48px; margin-bottom: 16px;">💰</div>
+    <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">Saldo disponible</div>
+    <div style="font-size: 48px; font-weight: 700; margin-bottom: 24px;">$250</div>
+    <button class="btn btn-primary btn-full" onclick="requestWithdrawal()">💸 Solicitar retiro</button>
+  </div>
+</div>
+
+<div class="list-card">
+  <h3 style="margin-bottom: 16px;">Historial de transacciones</h3>
+  <div class="list-item">
+    <div class="list-item-content">
+      <div class="list-item-title">Venta - Accidente en Av. Mitre</div>
+      <div class="list-item-meta">10 Jun 2025</div>
+    </div>
+    <div style="font-weight: 700; color: var(--success);">+$50</div>
+  </div>
+  <div class="list-item">
+    <div class="list-item-content">
+      <div class="list-item-title">Venta - Manifestación Congreso</div>
+      <div class="list-item-meta">11 Jun 2025</div>
+    </div>
+    <div style="font-weight: 700; color: var(--success);">+$120</div>
+  </div>
+  <div class="list-item">
+    <div class="list-item-content">
+      <div class="list-item-title">Compra - Incendio industrial</div>
+      <div class="list-item-meta">12 Jun 2025</div>
+    </div>
+    <div style="font-weight: 700; color: var(--accent);">-$80</div>
+  </div>
+</div>
+  </div>
+  <div id="view-profile" class="view">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Mi perfil</div>
+        <div class="section-subtitle">Configuración de cuenta</div>
+      </div>
+    </div>
+<div class="list-card">
+  <div style="text-align: center; padding: 20px;">
+    <div style="font-size: 64px; margin-bottom: 16px;">👤</div>
+    <div style="font-size: 20px; font-weight: 700; margin-bottom: 4px;">Juan Pérez</div>
+    <div style="color: var(--text-secondary);">juan.perez@email.com</div>
+    <div style="margin-top: 12px;">
+      <span class="status-badge" style="background: rgba(52, 199, 89, 0.15); color: var(--success);">✓ Verificado</span>
+    </div>
+  </div>
+</div>
+
+<div class="list-card">
+  <div class="list-item" onclick="showView('accounts')" style="cursor: pointer;">
+    <div style="font-size: 24px;">👥</div>
+    <div class="list-item-content">
+      <div class="list-item-title">Cuentas vinculadas</div>
+      <div class="list-item-meta">3 subcuentas activas</div>
+    </div>
+    <div style="font-size: 20px; color: var(--text-secondary);">›</div>
+  </div>
+  
+  <div class="list-item" style="opacity: 0.5; cursor: not-allowed;">
+    <div style="font-size: 24px;">🔒</div>
+    <div class="list-item-content">
+      <div class="list-item-title">Seguridad</div>
+      <div class="list-item-meta">Próximamente</div>
+    </div>
+  </div>
+  
+  <div class="list-item" style="opacity: 0.5; cursor: not-allowed;">
+    <div style="font-size: 24px;">⚙️</div>
+    <div class="list-item-content">
+      <div class="list-item-title">Preferencias</div>
+      <div class="list-item-meta">Próximamente</div>
+    </div>
+  </div>
+</div>
+
+<div class="list-card">
+  <button class="btn btn-secondary btn-full" onclick="logout()">Cerrar sesión</button>
+</div>
+  </div>
+  <div id="view-accounts" class="view">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Cuentas vinculadas</div>
+        <div class="section-subtitle">Administra tus subcuentas</div>
+      </div>
+    </div>
+<div class="list-card">
+  <div class="list-item">
+    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop" class="list-item-image">
+    <div class="list-item-content">
+      <div class="list-item-title">Cuenta 1</div>
+      <div class="list-item-meta">12 archivos enviados</div>
+    </div>
+  </div>
+  
+  <div class="list-item">
+    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" class="list-item-image">
+    <div class="list-item-content">
+      <div class="list-item-title">Cuenta 2</div>
+      <div class="list-item-meta">7 archivos enviados</div>
+    </div>
+  </div>
+  
+  <div class="list-item">
+    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" class="list-item-image">
+    <div class="list-item-content">
+      <div class="list-item-title">Cuenta 3</div>
+      <div class="list-item-meta">3 archivos enviados</div>
+    </div>
+  </div>
+  
+  <div class="list-item" style="opacity: 0.5;">
+    <div style="font-size: 24px;">➕</div>
+    <div class="list-item-content">
+      <div class="list-item-title">Subcuenta 4 disponible</div>
+    </div>
+  </div>
+  
+  <div class="list-item" style="opacity: 0.5;">
+    <div style="font-size: 24px;">➕</div>
+    <div class="list-item-content">
+      <div class="list-item-title">Subcuenta 5 disponible</div>
+    </div>
+  </div>
+</div>
+
+<button class="btn btn-primary btn-full" onclick="addSubaccount()">
+  ➕ Agregar subcuenta
+</button>
+  </div>
+</div>
 <div class="bottom-nav">
-  <div class="nav-item active" onclick="showView('home')">🏠<br>Inicio</div>
-  <div class="nav-item" onclick="showView('discover')">🔍<br>Explorar</div>
-  <div class="nav-item" onclick="showView('upload')">📤<br>Subir</div>
-  <div class="nav-item" onclick="showView('sales')"><div id="navNotif" class="notif-badge"></div>📊<br>Ventas</div>
-  <div class="nav-item" onclick="showView('wallet')">💰<br>Billetera</div>
+  <div class="nav-item active" onclick="showView('home')">
+    <div class="nav-item-icon">🏠</div>
+    <div>Inicio</div>
+  </div>
+  <div class="nav-item" onclick="showView('discover')">
+    <div class="nav-item-icon">🔍</div>
+    <div>Explorar</div>
+  </div>
+  <div class="nav-item" onclick="showView('upload')">
+    <div class="nav-item-icon">📤</div>
+    <div>Subir</div>
+  </div>
+  <div class="nav-item" onclick="showView('sales')">
+    <div class="nav-item-icon">📊</div>
+    <div>Mis Noticias</div>
+  </div>
+  <div class="nav-item" onclick="showView('wallet')">
+    <div class="nav-item-icon">💰</div>
+    <div>Billetera</div>
+  </div>
 </div>
-
 <div id="modal" class="modal">
   <div class="modal-content">
-    <div style="padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between">
-      <h3 id="modalTitle">Detalle de Noticia</h3>
-      <button onclick="closeModal()" style="background:none; border:none; color:var(--text); font-size:24px; cursor:pointer">✕</button>
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
-    <div id="modalBody" style="padding:20px"></div>
+    <div class="modal-body" id="modalBody"></div>
   </div>
 </div>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-// ============ TODA LA LÓGICA ORIGINAL RECUPERADA ============
-const currentUser = { name: "Juan Pérez", balance: 250 };
-const trendTags = ["#accidente", "#politica", "#urgente", "#deportes", "#clima"];
-let feed = [
-  {id:1, title:'Choque Múltiple Panamericana', price:50, lat:-34.6037, lng:-58.3816, img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#urgente #transito'},
-  {id:2, title:'Gran Incendio en Quilmes', price:150, lat:-34.6070, lng:-58.3772, img:'https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#incendio #quilmes'},
-  {id:3, title:'Video Exclusivo Robó', price:500, lat:-34.5900, lng:-58.3800, img:'https://images.unsplash.com/photo-1590856029826-c7a73142bbf1?w=800', licenseType:'exclusive', status:'for_sale', hashtags: '#exclusivo #seguridad'}
+<script>// ============ DATOS ============
+const feed = [
+  {id:1,title:'Accidente en Av. Mitre',price:50,lat:-34.6037,lng:-58.3816,importance:'high',img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop',licenseType:'nonexclusive',status:'for_sale',hashtags:'#accidente #tránsito',trending:true},
+  {id:2,title:'Manifestación frente al Congreso',price:120,lat:-34.6070,lng:-58.3772,importance:'medium',img:'https://images.unsplash.com/photo-1590856029826-c7a73142bbf1?w=800&h=600&fit=crop',licenseType:'exclusive',status:'for_sale',hashtags:'#manifestacion #política',trending:true},
+  {id:3,title:'Incendio en polígono industrial',price:80,lat:-34.6000,lng:-58.3900,importance:'low',img:'https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?w=800&h=600&fit=crop',licenseType:'nonexclusive',status:'in_review',hashtags:'#incendio #industria',trending:false},
+  {id:4,title:'Corte en Ruta 9 por protesta',price:70,lat:-34.6050,lng:-58.3920,importance:'medium',img:'https://images.unsplash.com/photo-1558882224-dda166733046?w=800&h=600&fit=crop',licenseType:'geo',status:'sold',hashtags:'#ruta9 #protesta',trending:false},
+  {id:5,title:'Accidente menor en zona norte',price:25,lat:-34.5990,lng:-58.3850,importance:'low',img:'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800&h=600&fit=crop',licenseType:'nonexclusive',status:'for_sale',hashtags:'#choque',trending:false},
+  {id:6,title:'Fuga de gas en barrio sur',price:95,lat:-34.6080,lng:-58.3890,importance:'high',img:'https://images.unsplash.com/photo-1562690868-60bbe7293e94?w=800&h=600&fit=crop',licenseType:'nonexclusive',status:'for_sale',hashtags:'#gas #emergencia',trending:true}
+];
+
+const trendingHashtags = ['#accidente', '#manifestacion', '#urgente', '#ultimahora', '#gas', '#emergencia', '#tránsito'];
+
+const purchases = [
+  {id:101,title:'Accidente en Av. Mitre',price:50,date:'2025-06-10'},
+  {id:102,title:'Manifestación frente al Congreso',price:120,date:'2025-06-11'}
 ];
 
 let negotiations = [];
-let salesHistory = [{title: 'Corte de Luz', amount: 45, date: '28/12 14:20', img:'https://via.placeholder.com/100'}];
-let purchases = [{title: 'Manifestación', price: 120, date: '27/12 10:00'}];
-let subaccounts = [{name: 'Dron Norte', files: 5}, {name: 'Cámara 2', files: 12}];
 
-let earningsChart = null;
-let activeInterval = null;
-const cashSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2012/2012-preview.mp3');
+// ============ THEME ============
+const themeToggle = document.getElementById('themeToggle');
+function applyTheme(theme) {
+  document.body.classList.remove('light', 'dark');
+  document.body.classList.add(theme);
+  localStorage.setItem('theme', theme);
+  themeToggle.textContent = theme === 'light' ? '🌞' : '🌙';
+}
+themeToggle.onclick = () => {
+  const newTheme = document.body.classList.contains('light') ? 'dark' : 'light';
+  applyTheme(newTheme);
+};
+applyTheme(localStorage.getItem('theme') || 'dark');
 
-// RENDERIZADO (MARCA DE AGUA MEJORADA)
-function generateWatermark() {
-  let cells = '';
-  for(let i=0; i<9; i++) {
-    cells += `<div class="watermark-cell"><span class="wm-brand">Paywall News</span><span class="wm-user">${currentUser.name}</span></div>`;
+// ============ MAPA ============
+let map = null;
+
+function initMap() {
+  if (map) return;
+  
+  try {
+    map = L.map('map').setView([-34.6037, -58.3816], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    function getImportanceColor(imp) {
+      if (imp === 'high') return '#ff3b30';
+      if (imp === 'medium') return '#ffcc00';
+      return '#4cd964';
+    }
+
+    feed.forEach(item => {
+      const pin = L.divIcon({
+        className: '',
+        html: `<div style="width:24px;height:24px;background:${getImportanceColor(item.importance)};border-radius:50% 50% 50% 0;transform:rotate(45deg);border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,0.3);"></div>`
+      });
+      const marker = L.marker([item.lat, item.lng], { icon: pin }).addTo(map);
+      marker.on('click', () => openDetail(item.id));
+    });
+  } catch (error) {
+    console.error('Error inicializando mapa:', error);
   }
-  return `<div class="watermark-overlay">${cells}</div>`;
 }
 
-function renderNews(id, items) {
-  const container = document.getElementById(id);
-  if(!container) return;
-  container.innerHTML = items.map(item => `
+window.addEventListener('load', function() {
+  setTimeout(initMap, 100);
+});
+
+// ============ RENDER NOTICIAS ============
+function getLicenseBadge(type) {
+  if (type === 'exclusive') return '<div class="license-badge license-exclusive">🏆 EXCLUSIVA</div>';
+  if (type === 'geo') return '<div class="license-badge license-geo">🗺️ GEO</div>';
+  return '<div class="license-badge license-nonexclusive">🌐 COMPARTIDA</div>';
+}
+
+function getStatusBadge(status) {
+  if (status === 'for_sale') return '<span class="status-badge status-for-sale">En venta</span>';
+  if (status === 'negotiating') return '<span class="status-badge status-negotiating">En negociación</span>';
+  if (status === 'in_review') return '<span class="status-badge status-in-review">En revisión</span>';
+  return '<span class="status-badge status-sold">Vendida</span>';
+}
+
+function renderNewsCard(item) {
+  const trendingBadge = item.trending ? '<span style="background: rgba(255, 59, 48, 0.15); color: var(--accent); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-left: 8px;">🔥 TRENDING</span>' : '';
+  
+  // Generar la marca de agua dinámica (9 celdas)
+  const watermarkHTML = Array(9).fill('<div class="watermark-text">Paywall News</div>').join('');
+
+  return `
     <div class="news-card" onclick="openDetail(${item.id})">
       <div class="news-card-image">
-        <img src="${item.img}">
-        ${item.status !== 'sold' ? generateWatermark() : ''}
+        <img src="${item.img}" alt="${item.title}">
+        ${item.status !== 'sold' ? `<div class="watermark-overlay">${watermarkHTML}</div>` : ''}
+        ${getLicenseBadge(item.licenseType)}
         <div class="price-badge">$${item.price}</div>
-        <div class="license-badge ${item.licenseType === 'exclusive' ? 'license-exclusive' : 'license-nonexclusive'}">
-            ${item.licenseType === 'exclusive' ? '🏆 EXCLUSIVA' : '🌐 COMPARTIDA'}
+      </div>
+      <div class="news-card-content">
+        <div class="news-card-title">${item.title}</div>
+        <div class="news-card-meta">
+          ${getStatusBadge(item.status)}
+          <span>${item.importance === 'high' ? '🔥' : item.importance === 'medium' ? '⚡' : '📍'}</span>
         </div>
+        <div class="news-card-hashtags">${item.hashtags} ${trendingBadge}</div>
       </div>
-      <div style="padding:15px">
-        <strong>${item.title}</strong>
-        <p style="font-size:12px; color:var(--info); margin:5px 0">${item.hashtags}</p>
-        <small>${item.status === 'for_sale' ? '🟢 Disponible' : '🟡 Negociando'}</small>
-      </div>
-    </div>`).join('');
+    </div>
+  `;
 }
 
-// LOGICA DE NEGOCIACIÓN ORIGINAL (CON CONTRAOFERTA Y MONTO MANUAL)
-function openDetail(id) {
-  const item = feed.find(x => x.id === id);
-  document.getElementById('modalTitle').textContent = item.title;
-  
-  let content = `
-    <div style="position:relative; border-radius:12px; overflow:hidden">
-        <img src="${item.img}" style="width:100%">
-        ${generateWatermark()}
-    </div>
-    <div style="margin:15px 0"><strong>${item.hashtags}</strong></div>
-  `;
+function renderGrid(containerId, items) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = items.map(item => renderNewsCard(item)).join('');
+}
 
-  if(item.licenseType === 'exclusive') {
-      content += `<button class="btn btn-primary" onclick="buyDirect(${item.id})">Comprar Exclusividad Directa $${item.price}</button>`;
-  } else {
-      content += `
-        <button class="btn btn-primary" onclick="buyDirect(${item.id})">Comprar Licencia Compartida $${item.price}</button>
+// ============ BÚSQUEDA Y FILTROS ============
+function filterNews() {
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  const licenseFilter = document.getElementById('filterLicense').value;
+  const importanceFilter = document.getElementById('filterImportance').value;
+
+  let filtered = feed.filter(item => {
+    const matchSearch = !searchTerm || 
+      item.title.toLowerCase().includes(searchTerm) || 
+      item.hashtags.toLowerCase().includes(searchTerm);
+    const matchLicense = !licenseFilter || item.licenseType === licenseFilter;
+    const matchImportance = !importanceFilter || item.importance === importanceFilter;
+    return matchSearch && matchLicense && matchImportance;
+  });
+
+  renderGrid('discoverGrid', filtered);
+  document.getElementById('noResults').style.display = filtered.length === 0 ? 'block' : 'none';
+}
+
+document.getElementById('searchInput')?.addEventListener('input', filterNews);
+document.getElementById('filterLicense')?.addEventListener('change', filterNews);
+document.getElementById('filterImportance')?.addEventListener('change', filterNews);
+
+// ============ MODAL DETALLE ============
+function openDetail(itemId) {
+  const item = feed.find(x => x.id === itemId);
+  if (!item) return;
+
+  const licenseInfo = {
+    exclusive: { name: '🏆 Licencia Exclusiva', desc: 'Serás el único medio con este contenido. Se elimina de la venta tras tu compra.' },
+    nonexclusive: { name: '🌐 Licencia No Exclusiva', desc: 'Otros medios pueden comprarla. Uso ilimitado y perpetuo.' },
+    geo: { name: '🗺️ Licencia Geográfica', desc: 'Exclusiva solo en tu región. Disponible para otras geografías.' }
+  };
+
+  const license = licenseInfo[item.licenseType];
+  
+  let buyOptions = '';
+  
+  if (item.status === 'negotiating') {
+    buyOptions = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">⏳ Este contenido está en negociación con otro comprador.</div>';
+  } else if (item.status === 'in_review') {
+    buyOptions = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">⏳ Contenido en revisión. No disponible para compra.</div>';
+  } else if (item.status === 'sold') {
+    buyOptions = '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">✓ Este contenido ya fue vendido</div>';
+  } else if (item.status === 'for_sale') {
+    buyOptions = `
+      <button class="btn btn-primary btn-full" onclick="buyNow(${item.id})">
+        💳 Comprar licencia no exclusiva - $${item.price}
+      </button>
+    `;
+    
+    if (item.licenseType === 'nonexclusive') {
+      buyOptions += `
         <div class="offer-section">
-            <h4 style="text-align:center; color:var(--gold); margin-bottom:10px">💎 Iniciar Negociación</h4>
-            <div class="quick-offers">
-                <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*2})"><div>X2</div>$${item.price*2}</div>
-                <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*3})"><div>X3</div>$${item.price*3}</div>
-                <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*4})"><div>X4</div>$${item.price*4}</div>
+          <h4>💎 Solicitar Exclusividad</h4>
+          <p style="text-align:center; color:var(--text-secondary); font-size:14px; margin-bottom:16px">
+            Sé el único medio con este contenido
+          </p>
+          
+          <div class="quick-offers">
+            <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price * 2})">
+              <div>X2</div>
+              <div>$${item.price * 2}</div>
             </div>
-            <div style="display:flex; gap:10px">
-                <input type="number" id="customOffer" placeholder="Monto específico..." style="flex:1; padding:12px; border-radius:10px; background:var(--bg); border:1px solid var(--border); color:white">
-                <button class="btn btn-gold" style="width:auto" onclick="sendCustomOffer(${item.id})">Enviar</button>
+            <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price * 3})">
+              <div>X3</div>
+              <div>$${item.price * 3}</div>
             </div>
+            <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price * 4})">
+              <div>X4</div>
+              <div>$${item.price * 4}</div>
+            </div>
+          </div>
+          
+          <p style="text-align:center; color:var(--text-secondary); font-size:14px; margin-bottom:12px">
+            o haz tu propia oferta:
+          </p>
+          
+          <div class="input-group">
+            <input 
+              type="number" 
+              id="customOffer${item.id}" 
+              class="form-input" 
+              placeholder="Ej: ${item.price * 2.5}" 
+              min="${item.price * 2}"
+              style="margin-bottom: 0">
+            <button class="btn btn-gold" onclick="makeCustomOffer(${item.id})" style="width:auto; padding:14px 28px; margin-top: 0">
+              Enviar
+            </button>
+          </div>
+          
+          <div class="helper-text">
+            Mínimo: $${item.price * 2} • ⏰ El vendedor tendrá 15 min para responder
+          </div>
         </div>
       `;
+    }
   }
-  document.getElementById('modalBody').innerHTML = content;
+  
+  document.getElementById('modalTitle').textContent = item.title;
+  
+  // Imagen en modal con marca de agua
+  const watermarkHTML = Array(9).fill('<div class="watermark-text">Paywall News</div>').join('');
+
+  document.getElementById('modalBody').innerHTML = `
+    <div style="position:relative; width:100%; border-radius:12px; overflow:hidden; margin-bottom:20px;">
+        <img src="${item.img}" class="modal-image" style="margin-bottom:0">
+        ${item.status !== 'sold' ? `<div class="watermark-overlay">${watermarkHTML}</div>` : ''}
+    </div>
+    
+    <div class="info-section">
+      <div class="info-row">
+        <div class="info-label">Tipo de licencia</div>
+        <div class="info-value">${license.name}</div>
+      </div>
+      <div style="padding: 12px 0; color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+        ${license.desc}
+      </div>
+      <div class="info-row">
+        <div class="info-label">Precio base</div>
+        <div class="info-value" style="font-size: 24px; color: var(--accent);">$${item.price}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Estado</div>
+        <div class="info-value">${getStatusBadge(item.status)}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Hashtags</div>
+        <div class="info-value" style="color: var(--info);">${item.hashtags}</div>
+      </div>
+    </div>
+
+    ${buyOptions}
+  `;
+
   document.getElementById('modal').classList.add('active');
 }
 
-// PANEL DE VENDEDOR CON CONTRAOFERTA
+function closeModal() {
+  document.getElementById('modal').classList.remove('active');
+}
+
+function buyNow(itemId) {
+  const item = feed.find(x => x.id === itemId);
+  if (!item || item.status !== 'for_sale') return;
+  
+  alert(`✓ Compra realizada!\n\nNoticia: ${item.title}\nLicencia: No exclusiva\nPrecio: $${item.price}`);
+  purchases.push({
+    id: 200 + itemId,
+    title: item.title,
+    price: item.price,
+    date: new Date().toISOString().slice(0,10)
+  });
+  
+  if (item.licenseType === 'exclusive') {
+    item.status = 'sold';
+  }
+  
+  renderAllViews();
+  closeModal();
+}
+
+// ========== SISTEMA DE NEGOCIACIÓN (PARTE 2 INTEGRADA) ==========
+function makeOffer(itemId, amount) {
+  createNegotiation(itemId, amount);
+}
+
+function makeCustomOffer(itemId) {
+  const amount = Number(document.getElementById('customOffer' + itemId).value);
+  const item = feed.find(x => x.id === itemId);
+  
+  if (!amount || amount < item.price * 2) {
+    alert(`⚠️ La oferta debe ser al menos el doble del precio base ($${item.price * 2})`);
+    return;
+  }
+  
+  createNegotiation(itemId, amount);
+}
+
+function createNegotiation(newsId, amount) {
+  const item = feed.find(x => x.id === newsId);
+  const negId = negotiations.length + 1;
+  
+  negotiations.push({
+    id: negId,
+    newsId: newsId,
+    buyer: 'Juan Pérez',
+    offers: [{ from: 'buyer', amount: amount, timestamp: Date.now() }],
+    status: 'pending',
+    round: 1,
+    expiresAt: Date.now() + (15 * 60 * 1000)
+  });
+  
+  item.status = 'negotiating';
+  
+  alert(`📩 Oferta enviada: $${amount}\n\n⏰ El vendedor tiene 15 minutos para responder.\nRecibirás una notificación con su decisión.`);
+  
+  closeModal();
+  renderAllViews();
+}
+
 function showSellerPanel(negId) {
   const neg = negotiations.find(n => n.id === negId);
-  const item = feed.find(f => f.id === neg.newsId);
-  document.getElementById('modalTitle').textContent = 'Oferta Recibida';
-  document.getElementById('modalBody').innerHTML = `
-    <div class="timer-box">
-        <small>TIEMPO RESTANTE</small>
-        <div id="countdown" class="timer-countdown">15:00</div>
-    </div>
-    <div style="text-align:center; padding:20px; background:var(--bg); border-radius:15px; margin-bottom:15px">
-        <h1 style="color:var(--gold)">$${neg.amount}</h1>
-        <p>${item.title}</p>
-    </div>
-    <button class="btn btn-primary" onclick="acceptOffer(${negId})">ACEPTAR OFERTA</button>
-    <div style="margin-top:15px">
-        <input type="number" id="counterAmount" placeholder="Enviar contraoferta..." style="width:100%; padding:12px; border-radius:10px; background:var(--bg); border:1px solid var(--border); color:white">
-        <button class="btn btn-gold" style="margin-top:10px" onclick="sendCounter(${negId})">ENVIAR CONTRAOFERTA</button>
-    </div>
-  `;
-  document.getElementById('modal').classList.add('active');
-  startCountdown(negId);
-}
-
-// LOGICA DE GRÁFICO (Eje X dinámico)
-function initChart() {
-    const ctx = document.getElementById('earningsChart').getContext('2d');
-    earningsChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Lun','Mar','Mie','Jue','Vie','Sab','Dom'],
-            datasets: [{ data: [50, 80, 45, 120, 100, 190, 70], backgroundColor: '#ff3b30', borderRadius: 4 }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } }
-        }
-    });
-}
-
-function updateChart(period, btn) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    if(period === 'week') { earningsChart.data.labels = ['Lun','Mar','Mie','Jue','Vie','Sab','Dom']; earningsChart.data.datasets[0].data = [50,80,45,120,100,190,70]; }
-    else if(period === 'month') { earningsChart.data.labels = ['Sem 1','Sem 2','Sem 3','Sem 4']; earningsChart.data.datasets[0].data = [400, 750, 500, 900]; }
-    else { earningsChart.data.labels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; earningsChart.data.datasets[0].data = [1200, 1500, 1100, 1800, 2000, 2500, 1900, 2200, 2400, 2800, 2600, 3500]; }
-    earningsChart.update();
-}
-
-// VISTAS RECUPERADAS
-function showView(name) {
-  document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-  document.getElementById(`view-${name}`).style.display = 'block';
+  const item = feed.find(x => x.id === neg.newsId);
+  const lastOffer = neg.offers[neg.offers.length - 1];
   
-  if(name === 'sales') { renderSales(); if(!earningsChart) initChart(); }
-  if(name === 'discover') { renderNews('discoverGrid', feed); renderHashtags(); }
-  if(name === 'upload') renderUploadTrends();
-}
-
-function renderSales() {
-    const pending = negotiations.filter(n => n.status === 'pending');
-    document.getElementById('pendingOffersCard').style.display = pending.length ? 'block' : 'none';
-    document.getElementById('offersList').innerHTML = pending.map(n => `
-        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:15px; border-radius:12px; margin-bottom:10px">
-            <div><strong>$${n.amount}</strong><br><small>Oferta Recibida</small></div>
-            <button class="btn btn-primary" style="width:auto" onclick="showSellerPanel(${n.id})">Gestionar</button>
-        </div>`).join('');
-
-    document.getElementById('salesList').innerHTML = salesHistory.map(s => `
-        <div style="display:flex; gap:12px; align-items:center; padding:10px; border-bottom:1px solid var(--border)">
-            <img src="${s.img}" style="width:60px; height:45px; border-radius:6px; object-fit:cover">
-            <div style="flex:1"><strong>${s.title}</strong><br><small>${s.date}</small></div>
-            <strong style="color:var(--success)">+$${s.amount}</strong>
-        </div>`).join('');
+  let counterSection = '';
+  if (neg.round < 3) {
+    counterSection = `
+      <div style="margin-top:20px; padding:20px; background:var(--bg); border-radius:12px">
+        <h4 style="margin-bottom:16px; font-size:16px">🔄 Hacer contraoferta</h4>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px">
+          <div class="quick-offer-btn" onclick="counterOffer(${negId}, ${item.price * 3})">
+            <div>X3</div>
+            <div>$${item.price * 3}</div>
+          </div>
+          <div class="quick-offer-btn" onclick="counterOffer(${negId}, ${item.price * 4})">
+            <div>X4</div>
+            <div>$${item.price * 4}</div>
+          </div>
+        </div>
+        
+        <div class="input-group">
+          <input 
+            type="number" 
+            id="counterAmount" 
+            class="form-input" 
+            placeholder="Monto personalizado" 
+            min="${lastOffer.amount}"
+            style="margin-bottom: 0">
+          <button class="btn btn-gold" onclick="customCounterOffer(${negId})" style="width:auto; padding:14px 28px; margin-top: 0">
+            Enviar
+          </button>
+        </div>
+        
+        <div class="helper-text">
+          La contraoferta debe ser mayor a $${lastOffer.amount}
+        </div>
+      </div>
+    `;
+  } else {
+    counterSection = `
+      <div style="text-align:center; margin-top:16px; padding:16px; background:rgba(255,204,0,0.1); border-radius:8px">
+        <div style="color:var(--warning); font-weight:600">⚠️ Última ronda</div>
+        <div style="color:var(--text-secondary); font-size:14px; margin-top:4px">Debes aceptar o rechazar</div>
+      </div>
+    `;
+  }
+  
+  document.getElementById('modalTitle').textContent = '🔔 Oferta de exclusividad recibida';
+  document.getElementById('modalBody').innerHTML = `
+    <div class="offer-highlight">
+      <h3 style="margin-bottom:8px">${item.title}</h3>
+      <div style="color:var(--text-secondary); font-size:14px">Precio base: $${item.price}</div>
+      <div class="offer-amount">$${lastOffer.amount}</div>
+      <div style="color:var(--text-secondary); font-size:14px">${(lastOffer.amount / item.price).toFixed(1)}x el precio base</div>
+      <div class="timer-box">
+        <div style="font-size:13px; color:var(--warning)">⏰ Ronda ${neg.round} de 3</div>
+      </div>
+    </div>
     
-    document.getElementById('purchasesList').innerHTML = purchases.map(p => `
-        <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid var(--border)">
-            <div><strong>${p.title}</strong><br><small>${p.date}</small></div>
-            <strong style="color:var(--accent)">-$${p.price}</strong>
-        </div>`).join('');
+    <button class="btn btn-primary btn-full" onclick="acceptOffer(${negId})">
+      ✅ Aceptar oferta - $${lastOffer.amount}
+    </button>
+    
+    <button class="btn btn-secondary btn-full" onclick="rejectOffer(${negId})">
+      ❌ Rechazar oferta
+    </button>
+    
+    ${counterSection}
+  `;
+  
+  document.getElementById('modal').classList.add('active');
 }
 
-function renderHashtags() {
-    document.getElementById('trendingHashtags').innerHTML = trendTags.map(t => `<span style="display:inline-block; background:rgba(255,59,48,0.1); padding:6px 15px; border-radius:20px; color:var(--accent); margin-right:10px; cursor:pointer" onclick="filterHash('${t}')">${t}</span>`).join('');
+function acceptOffer(negId) {
+  const neg = negotiations.find(n => n.id === negId);
+  const item = feed.find(x => x.id === neg.newsId);
+  const amount = neg.offers[neg.offers.length - 1].amount;
+  
+  neg.status = 'accepted';
+  item.status = 'sold';
+  item.licenseType = 'exclusive';
+  
+  alert(`✅ ¡Oferta aceptada!\n\nVendido por $${amount} como EXCLUSIVA.\nEl contenido se eliminará de la plataforma.`);
+  
+  closeModal();
+  renderAllViews();
 }
 
-function renderUploadTrends() {
-    document.getElementById('uploadTrendTags').innerHTML = trendTags.slice(0,3).join(", ");
+function rejectOffer(negId) {
+  const neg = negotiations.find(n => n.id === negId);
+  const item = feed.find(x => x.id === neg.newsId);
+  
+  neg.status = 'rejected';
+  item.status = 'for_sale';
+  
+  alert('❌ Oferta rechazada.\n\nLa noticia vuelve a estar disponible para venta.');
+  
+  closeModal();
+  renderAllViews();
 }
 
-function selectLic(el, type) {
+function counterOffer(negId, amount) {
+  makeCounterOffer(negId, amount);
+}
+
+function customCounterOffer(negId) {
+  const amount = Number(document.getElementById('counterAmount').value);
+  const neg = negotiations.find(n => n.id === negId);
+  const lastOffer = neg.offers[neg.offers.length - 1].amount;
+  
+  if (!amount || amount <= lastOffer) {
+    alert(`⚠️ La contraoferta debe ser mayor a la oferta actual ($${lastOffer})`);
+    return;
+  }
+  
+  makeCounterOffer(negId, amount);
+}
+
+function makeCounterOffer(negId, amount) {
+  const neg = negotiations.find(n => n.id === negId);
+  const item = feed.find(x => x.id === neg.newsId);
+  
+  if (neg.round >= 3) {
+    alert('⚠️ Máximo de 3 rondas alcanzado.\n\nDebes aceptar o rechazar la oferta actual.');
+    return;
+  }
+  
+  neg.offers.push({
+    from: 'seller',
+    amount: amount,
+    timestamp: Date.now()
+  });
+  neg.round++;
+  neg.expiresAt = Date.now() + (15 * 60 * 1000);
+  neg.status = 'counter_pending';
+  
+  alert(`🔄 Contraoferta enviada: $${amount}\n\n⏰ El comprador tiene 15 minutos para responder.\n\nRonda ${neg.round} de 3.`);
+  
+  closeModal();
+  renderAllViews();
+}
+
+// ============ SUBIR CONTENIDO ============
+function displayTrendingSuggestions() {
+  const container = document.getElementById('trendingSuggestions');
+  if (!container) return;
+  
+  const suggestions = trendingHashtags.slice(0, 5).map(tag => 
+    `<span onclick="addHashtag('${tag}')" style="background: rgba(255, 59, 48, 0.1); padding: 4px 8px; border-radius: 6px; margin-right: 6px; display: inline-block; margin-bottom: 4px; cursor: pointer;">🔥 ${tag}</span>`
+  ).join('');
+  
+  container.innerHTML = suggestions;
+}
+
+function addHashtag(tag) {
+  const input = document.getElementById('hashtagsInput');
+  const current = input.value.trim();
+  if (!current.includes(tag)) {
+    input.value = current ? `${current} ${tag}` : tag;
+  }
+}
+
+document.querySelectorAll('.license-option').forEach(option => {
+  option.onclick = function() {
     document.querySelectorAll('.license-option').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
-    document.getElementById('licenseInput').value = type;
+    this.classList.add('selected');
+    document.getElementById('licenseInput').value = this.dataset.license;
+  };
+});
+
+// Inicializar selección
+if(document.querySelector('.license-option')) document.querySelector('.license-option').classList.add('selected');
+
+document.getElementById('uploadForm')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const title = document.getElementById('titleInput').value;
+  const hashtags = document.getElementById('hashtagsInput').value;
+  const price = Number(document.getElementById('priceInput').value);
+  const license = document.getElementById('licenseInput').value;
+  
+  const newId = Math.max(...feed.map(f => f.id)) + 1;
+  const newItem = {
+    id: newId,
+    title: title,
+    price: price,
+    lat: -34.6037 + (Math.random() - 0.5) * 0.02,
+    lng: -58.3816 + (Math.random() - 0.5) * 0.02,
+    importance: 'medium',
+    img: `https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&h=600&fit=crop&sig=${newId}`,
+    licenseType: license,
+    status: 'in_review',
+    hashtags: hashtags,
+    trending: trendingHashtags.some(t => hashtags.includes(t))
+  };
+  
+  feed.unshift(newItem);
+  
+  alert('✓ Contenido subido exitosamente.\n\nEstado: En revisión\nTe notificaremos cuando sea aprobado.');
+  
+  this.reset();
+  document.querySelectorAll('.license-option').forEach(o => o.classList.remove('selected'));
+  document.querySelector('.license-option').classList.add('selected');
+  document.getElementById('licenseInput').value = 'nonexclusive';
+  
+  renderAllViews();
+});
+
+// ============ MIS NOTICIAS ============
+function renderSales() {
+  const pending = negotiations.filter(n => n.status === 'pending');
+  const pendingCard = document.getElementById('pendingOffersCard');
+  
+  if (pending.length > 0) {
+    pendingCard.style.display = 'block';
+    document.getElementById('offersList').innerHTML = pending.map(neg => {
+      const item = feed.find(f => f.id === neg.newsId);
+      const lastOffer = neg.offers[neg.offers.length - 1];
+      return `
+        <div class="list-item">
+          <img src="${item.img}" class="list-item-image">
+          <div class="list-item-content">
+            <div class="list-item-title">${item.title}</div>
+            <div class="list-item-meta">
+              Oferta de ${neg.buyer}: <strong>$${lastOffer.amount}</strong> • Ronda ${neg.round}/3
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="showSellerPanel(${neg.id})" style="width:auto; padding:12px 20px; margin-top:0">
+            Ver oferta
+          </button>
+        </div>
+      `;
+    }).join('');
+  } else {
+    pendingCard.style.display = 'none';
+  }
+  
+  const salesList = document.getElementById('salesList');
+  const userItems = feed.slice(0, 4);
+  
+  if (userItems.length === 0) {
+    salesList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div><div class="empty-state-text">No has subido contenido aún</div></div>';
+  } else {
+    salesList.innerHTML = userItems.map(item => `
+      <div class="list-item">
+        <img src="${item.img}" class="list-item-image">
+        <div class="list-item-content">
+          <div class="list-item-title">${item.title}</div>
+          <div class="list-item-meta">${item.hashtags}</div>
+        </div>
+        <div class="list-item-actions">
+          ${getStatusBadge(item.status)}
+          <div style="font-weight: 700;">$${item.price}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  const purchasesList = document.getElementById('purchasesList');
+  if (purchases.length === 0) {
+    purchasesList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🛒</div><div class="empty-state-text">No has comprado contenido aún</div></div>';
+  } else {
+    purchasesList.innerHTML = purchases.map(p => `
+      <div class="list-item">
+        <img src="https://images.unsplash.com/photo-1586339949216-35c2747cc36d?w=200&h=150&fit=crop&sig=${p.id}" class="list-item-image">
+        <div class="list-item-content">
+          <div class="list-item-title">${p.title}</div>
+          <div class="list-item-meta">Comprado: ${p.date}</div>
+        </div>
+        <div style="font-weight: 700; color: var(--accent);">$${p.price}</div>
+      </div>
+    `).join('');
+  }
 }
 
-// AUXILIARES
-function makeOffer(itemId, amount) {
-    const expiresAt = Date.now() + (15 * 60 * 1000);
-    negotiations.push({ id: negotiations.length+1, newsId: itemId, amount, status: 'pending', expiresAt });
-    feed.find(x => x.id === itemId).status = 'negotiating';
-    document.getElementById('navNotif').classList.add('active');
-    closeModal(); renderNews('homeGrid', feed);
+// ============ NAVEGACIÓN ============
+function showView(viewName) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`view-${viewName}`).classList.add('active');
+  
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`[onclick="showView('${viewName}')"]`)?.classList.add('active');
+  
+  if (viewName === 'home') {
+    renderGrid('homeGrid', feed);
+    if (map) {
+      setTimeout(() => map.invalidateSize(), 100);
+    } else {
+      initMap();
+    }
+  } else if (viewName === 'discover') {
+    filterNews();
+  } else if (viewName === 'sales') {
+    renderSales();
+  } else if (viewName === 'upload') {
+    displayTrendingSuggestions();
+  }
 }
 
-function sendCustomOffer(itemId) {
-    const val = Number(document.getElementById('customOffer').value);
-    if(val > 0) makeOffer(itemId, val);
+function renderAllViews() {
+  renderGrid('homeGrid', feed);
+  filterNews();
+  renderSales();
 }
 
-function acceptOffer(id) {
-    const neg = negotiations.find(n => n.id === id);
-    const item = feed.find(f => f.id === neg.newsId);
-    cashSound.play().catch(()=>{});
-    item.status = 'sold';
-    neg.status = 'accepted';
-    salesHistory.unshift({title: item.title, amount: neg.amount, date: new Date().toLocaleDateString(), img: item.img});
-    document.getElementById('navNotif').classList.remove('active');
-    closeModal(); renderNews('homeGrid', feed);
+// ============ FUNCIONES AUXILIARES ============
+function requestWithdrawal() {
+  alert('💸 Solicitud de retiro enviada.\n\nProcesaremos tu solicitud en 2-3 días hábiles.');
 }
 
-function startCountdown(negId) {
-    if(activeInterval) clearInterval(activeInterval);
-    activeInterval = setInterval(() => {
-        const neg = negotiations.find(n => n.id === negId);
-        const diff = neg.expiresAt - Date.now();
-        if(diff <= 0) { clearInterval(activeInterval); closeModal(); return; }
-        const mins = Math.floor(diff/60000);
-        const secs = Math.floor((diff%60000)/1000);
-        const el = document.getElementById('countdown');
-        if(el) el.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-    }, 1000);
+function logout() {
+  if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+    alert('Sesión cerrada');
+  }
+}
+function addSubaccount() {
+  alert('➕ Función de agregar subcuenta (próximamente)');
 }
 
-function closeModal() { document.getElementById('modal').classList.remove('active'); clearInterval(activeInterval); }
-
-// INIT
-let map = L.map('map', {zoomControl: false}).setView([-34.6037, -58.3816], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-renderNews('homeGrid', feed);
-document.getElementById('themeToggle').onclick = () => document.body.classList.toggle('light');
+// ============ INIT ============
+renderAllViews();
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
 </script>
 </body>
 </html>
