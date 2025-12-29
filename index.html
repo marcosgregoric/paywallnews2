@@ -43,7 +43,7 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 .news-card-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
 .news-card:hover img { transform: scale(1.05); }
 
-/* MARCA DE AGUA (JERARQUÍA INVERTIDA) */
+/* MARCA DE AGUA */
 .watermark-overlay { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); pointer-events: none; z-index: 5; overflow: hidden; }
 .watermark-cell { display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-25deg); color: var(--watermark); text-align: center; }
 .wm-brand { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
@@ -106,8 +106,8 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 <header>
   <div class="brand"><span style="font-size: 24px;">📰</span><span>Paywall News</span></div>
   <div class="header-actions">
-    <button class="icon-btn" id="themeToggle">🌙</button>
-    <button class="icon-btn" onclick="showView('profile')">👤</button>
+    <button class="icon-btn" id="themeToggle" style="background:none; border:none; color:var(--text); font-size:20px; cursor:pointer">🌙</button>
+    <button class="icon-btn" onclick="showView('profile')" style="background:none; border:none; color:var(--text); font-size:20px; cursor:pointer">👤</button>
   </div>
 </header>
 
@@ -174,7 +174,7 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
     <div class="section-header"><div class="section-title">Mis Noticias</div></div>
     
     <div id="pendingOffersCard" style="display:none; margin-bottom:20px; border:2px solid var(--warning); border-radius:16px; padding:15px; background:rgba(255,204,0,0.05)">
-        <h3 style="color:var(--warning); margin-bottom:10px; font-size:16px">🔔 Ofertas Recibidas (Acción Requerida)</h3>
+        <h3 style="color:var(--warning); margin-bottom:10px; font-size:16px">🔔 Ofertas Recibidas</h3>
         <div id="offersList"></div>
     </div>
 
@@ -340,7 +340,15 @@ function renderGrid(id, items) {
   const container = document.getElementById(id);
   if(!container) return;
   if(items.length === 0) { container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-secondary)">No hay noticias disponibles.</div>'; return; }
-  container.innerHTML = items.map(item => `
+  
+  container.innerHTML = items.map(item => {
+    // FIX 2: ESTADO VENDIDO
+    let statusLabel = '● Disponible';
+    let statusColor = 'var(--success)';
+    if(item.status === 'negotiating') { statusLabel = '● Negociando'; statusColor = 'var(--warning)'; }
+    if(item.status === 'sold') { statusLabel = '● Vendido'; statusColor = 'var(--muted)'; }
+
+    return `
     <div class="news-card" onclick="openDetail(${item.id})">
       <div class="news-card-image">
         <img src="${item.img}">
@@ -352,9 +360,10 @@ function renderGrid(id, items) {
         <div class="list-item-title">${item.title}</div>
         ${getTrustBadge(item.trustScore || 0)}
         <div style="font-size:12px; color:var(--info); margin:5px 0">${item.hashtags}</div>
-        <small style="color:${item.status === 'for_sale' ? 'var(--success)' : 'var(--warning)'}">${item.status === 'for_sale' ? '● Disponible' : '● Negociando'}</small>
+        <small style="color:${statusColor}">${statusLabel}</small>
       </div>
-    </div>`).join('');
+    </div>`
+  }).join('');
 }
 
 // ============ DETALLE Y COMPRA ============
@@ -407,7 +416,7 @@ function buyDirect(id) {
     alert("✅ Compra exitosa. Ubicación revelada.");
 }
 
-// ============ SUBIR NOTICIA (FORMULARIO MEJORADO) ============
+// ============ SUBIR NOTICIA ============
 document.getElementById('uploadForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnUpload');
@@ -430,21 +439,18 @@ document.getElementById('uploadForm').addEventListener('submit', (e) => {
         
         feed.unshift(newItem);
         saveData(); renderMapMarkers(); renderAllViews();
-        
-        // RESET COMPLETO
         e.target.reset();
         document.querySelectorAll('.license-option').forEach(o => o.classList.remove('selected'));
         document.getElementById('opt-nonexclusive').classList.add('selected');
         document.getElementById('licInput').value = 'nonexclusive';
         closeModal(); showView('home');
-        
         btn.textContent = originalText;
         btn.disabled = false;
         alert("✅ Noticia subida y verificada exitosamente.");
     }, 1500);
 });
 
-// ============ NEGOCIACIÓN ============
+// ============ NEGOCIACIÓN & TIMER ============
 function makeOffer(itemId, amount) {
     const expiresAt = Date.now() + (15 * 60 * 1000);
     negotiations.push({ id: Date.now(), newsId: itemId, amount, status: 'pending', expiresAt });
@@ -452,6 +458,7 @@ function makeOffer(itemId, amount) {
     saveData(); document.getElementById('navNotif').classList.add('active'); closeModal(); renderAllViews();
 }
 function sendManualOffer(id) { const val = Number(document.getElementById('cOffer').value); if(val>0) makeOffer(id, val); }
+
 function showSellerPanel(negId) {
     const neg = negotiations.find(n => n.id === negId);
     const item = feed.find(f => f.id === neg.newsId);
@@ -464,18 +471,44 @@ function showSellerPanel(negId) {
         <button class="btn btn-primary" onclick="acceptOffer(${negId})">ACEPTAR</button>
         <div style="margin-top:15px"><input type="number" class="form-input" placeholder="Contraoferta..."><button class="btn btn-secondary" onclick="alert('Enviada')">Contraofertar</button></div>`;
     document.getElementById('modal').classList.add('active');
+    
+    // FIX 1: TIMER DINÁMICO
+    if(activeInterval) clearInterval(activeInterval);
+    updateTimerDisplay(neg.expiresAt); // Run once immediately
+    activeInterval = setInterval(() => updateTimerDisplay(neg.expiresAt), 1000);
 }
+
+function updateTimerDisplay(expiresAt) {
+    const diff = expiresAt - Date.now();
+    const el = document.getElementById('countdown');
+    if(!el) return;
+    if(diff <= 0) {
+        el.textContent = "00:00";
+        clearInterval(activeInterval);
+        return;
+    }
+    const mins = Math.floor(diff/60000);
+    const secs = Math.floor((diff%60000)/1000);
+    el.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
 function acceptOffer(id) {
     const neg = negotiations.find(n => n.id === id);
     const item = feed.find(f => f.id === neg.newsId);
     cashSound.play().catch(()=>{});
-    item.status = 'sold'; neg.status = 'accepted';
+    
+    item.status = 'sold'; 
+    neg.status = 'accepted';
     currentUser.balance += neg.amount;
     salesHistory.unshift({title: item.title, amount: neg.amount, date: new Date().toLocaleString(), img: item.img});
-    saveData(); closeModal(); renderAllViews();
+    
+    saveData(); 
+    closeModal(); 
+    renderMapMarkers(); // Update map immediately
+    renderAllViews();
 }
 
-// ============ CONTROL DE VISTAS ============
+// ============ CONTROL VISTAS ============
 function showView(name) {
     document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
@@ -488,14 +521,13 @@ function showView(name) {
     if(name === 'accounts') renderSubs();
     if(name === 'wallet') updateWalletUI();
     
-    // Highlight Nav
     const mapNav = {'home':0, 'discover':1, 'upload':2, 'sales':3, 'wallet':4};
     if(mapNav[name] !== undefined) document.querySelectorAll('.nav-item')[mapNav[name]].classList.add('active');
 }
 
 function updateWalletUI() { document.getElementById('walletBalance').textContent = `$${currentUser.balance}`; }
 
-// ============ CHART & LISTS ============
+// CHART & LISTS
 function initChart() {
     const ctx = document.getElementById('earningsChart').getContext('2d');
     earningsChart = new Chart(ctx, {
@@ -506,17 +538,9 @@ function initChart() {
 }
 function updateChart(p, btn) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
-    if(p==='month') { 
-        // CORRECCIÓN: MES = SEMANAS
-        earningsChart.data.labels = ['Sem 1','Sem 2','Sem 3','Sem 4']; 
-        earningsChart.data.datasets[0].data = [450, 800, 600, 1000]; 
-    } else if(p==='year') { 
-        earningsChart.data.labels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; 
-        earningsChart.data.datasets[0].data = [1200,1500,1100,1700,1900,2400,2000,2100,2300,2700,2500,3400]; 
-    } else { 
-        earningsChart.data.labels = ['Lun','Mar','Mie','Jue','Vie','Sab','Dom']; 
-        earningsChart.data.datasets[0].data = [50,90,45,130,110,200,75]; 
-    }
+    if(p==='month') { earningsChart.data.labels = ['Sem 1','Sem 2','Sem 3','Sem 4']; earningsChart.data.datasets[0].data = [450, 800, 600, 1000]; }
+    else if(p==='year') { earningsChart.data.labels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; earningsChart.data.datasets[0].data = [1200,1500,1100,1700,1900,2400,2000,2100,2300,2700,2500,3400]; }
+    else { earningsChart.data.labels = ['Lun','Mar','Mie','Jue','Vie','Sab','Dom']; earningsChart.data.datasets[0].data = [50,90,45,130,110,200,75]; }
     earningsChart.update();
 }
 
@@ -534,17 +558,10 @@ function selectLic(el, type) { document.querySelectorAll('.license-option').forE
 function closeModal() { document.getElementById('modal').classList.remove('active'); clearInterval(activeInterval); }
 function logout() { if(confirm('¿Salir?')) location.reload(); }
 
-// INIT (CORRECCIÓN HOME)
+// INIT
 document.getElementById('themeToggle').onclick = () => document.body.classList.toggle('light');
 document.getElementById('searchInput').oninput = (e) => { const v = e.target.value.toLowerCase(); renderGrid('discoverGrid', feed.filter(i => i.title.toLowerCase().includes(v) || i.hashtags.toLowerCase().includes(v))); };
-
-// FORZAR RENDERIZADO INICIAL
-window.onload = () => {
-    // Si localStorage esta vacío, aseguramos datos
-    if(feed.length === 0) { feed = defaultFeed; saveData(); }
-    showView('home'); 
-    renderGrid('homeGrid', feed);
-};
+window.onload = () => { if(feed.length===0){feed=defaultFeed;saveData();} showView('home'); renderGrid('homeGrid', feed); };
 </script>
 </body>
 </html>
