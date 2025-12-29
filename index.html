@@ -27,7 +27,7 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 .header-actions { display: flex; gap: 15px; }
 .container { max-width: 1200px; margin: 0 auto; padding: 20px; padding-bottom: 110px; }
 
-/* MAPA Y GPS */
+/* MAPA */
 .map-container { height: 360px; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px var(--shadow); margin-bottom: 24px; position: relative; border: 1px solid var(--border); z-index: 1; }
 #map { height: 100%; width: 100%; }
 .gps-btn { position: absolute; bottom: 20px; right: 20px; z-index: 1000; background: var(--card); color: var(--text); border: none; padding: 12px; border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; font-size: 20px; transition: transform 0.2s; }
@@ -43,7 +43,7 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 .news-card-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
 .news-card:hover img { transform: scale(1.05); }
 
-/* MARCA DE AGUA */
+/* MARCA DE AGUA (JERARQUÍA INVERTIDA) */
 .watermark-overlay { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); pointer-events: none; z-index: 5; overflow: hidden; }
 .watermark-cell { display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-25deg); color: var(--watermark); text-align: center; }
 .wm-brand { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
@@ -83,6 +83,7 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 .btn-primary { background: var(--accent); color: white; }
 .btn-gold { background: linear-gradient(135deg, #ffd700, #ffc107); color: #664d00; }
 .btn-secondary { background: var(--border); color: var(--text); }
+.icon-btn { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: transparent; border: none; font-size: 20px; }
 
 /* MODAL */
 .modal { position: fixed; inset: 0; background: var(--overlay); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 20px; }
@@ -93,6 +94,7 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 .bottom-nav { position: fixed; left: 16px; right: 16px; bottom: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; display: flex; padding: 10px; z-index: 100; box-shadow: 0 8px 32px var(--shadow); }
 .nav-item { flex: 1; text-align: center; padding: 5px; cursor: pointer; font-size: 11px; color: var(--text-secondary); position: relative; }
 .nav-item.active { color: var(--accent); font-weight: 700; }
+.nav-item-icon { font-size: 20px; margin-bottom: 4px; }
 .notif-badge { position: absolute; top: 2px; right: 30%; width: 10px; height: 10px; background: var(--accent); border-radius: 50%; display: none; border: 2px solid var(--card); }
 .notif-badge.active { display: block; animation: pulse 2s infinite; }
 @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
@@ -104,8 +106,8 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 <header>
   <div class="brand"><span style="font-size: 24px;">📰</span><span>Paywall News</span></div>
   <div class="header-actions">
-    <button class="icon-btn" id="themeToggle" style="background:none; border:none; color:var(--text); font-size:20px; cursor:pointer">🌙</button>
-    <button class="icon-btn" onclick="showView('profile')" style="background:none; border:none; color:var(--text); font-size:20px; cursor:pointer">👤</button>
+    <button class="icon-btn" id="themeToggle">🌙</button>
+    <button class="icon-btn" onclick="showView('profile')">👤</button>
   </div>
 </header>
 
@@ -154,8 +156,8 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
         <div class="form-group">
             <label class="form-label">Licencia</label>
             <div class="license-options">
-                <div class="license-option selected" onclick="selectLic(this, 'nonexclusive')"><strong>🌐 No Exclusiva</strong><br><small>Venta múltiple permitida.</small></div>
-                <div class="license-option" onclick="selectLic(this, 'exclusive')"><strong>🏆 Exclusiva</strong><br><small>Un solo comprador. Mayor precio.</small></div>
+                <div class="license-option selected" id="opt-nonexclusive" onclick="selectLic(this, 'nonexclusive')"><strong>🌐 No Exclusiva</strong><br><small>Venta múltiple permitida.</small></div>
+                <div class="license-option" id="opt-exclusive" onclick="selectLic(this, 'exclusive')"><strong>🏆 Exclusiva</strong><br><small>Un solo comprador. Mayor precio.</small></div>
                 <input type="hidden" id="licInput" value="nonexclusive">
             </div>
         </div>
@@ -163,13 +165,19 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
             <label class="form-label">Precio (USD)</label>
             <input type="number" id="upPrice" class="form-input" placeholder="50">
         </div>
-        <button type="submit" class="btn btn-primary">📤 Analizar Metadatos y Publicar</button>
+        <button type="submit" id="btnUpload" class="btn btn-primary">📤 Analizar Metadatos y Publicar</button>
       </form>
     </div>
   </div>
 
   <div id="view-sales" class="view">
-    <div class="section-header"><div class="section-title">Mis negocios</div></div>
+    <div class="section-header"><div class="section-title">Mis Noticias</div></div>
+    
+    <div id="pendingOffersCard" style="display:none; margin-bottom:20px; border:2px solid var(--warning); border-radius:16px; padding:15px; background:rgba(255,204,0,0.05)">
+        <h3 style="color:var(--warning); margin-bottom:10px; font-size:16px">🔔 Ofertas Recibidas (Acción Requerida)</h3>
+        <div id="offersList"></div>
+    </div>
+
     <div class="stats-container">
         <div style="display:flex; justify-content:space-between; align-items:center">
             <strong>Rendimiento</strong>
@@ -181,10 +189,7 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
         </div>
         <div class="chart-wrapper"><canvas id="earningsChart"></canvas></div>
     </div>
-    <div id="pendingOffersCard" style="display:none; margin-bottom:20px; border:2px solid var(--warning); border-radius:16px; padding:15px; background:rgba(255,204,0,0.05)">
-        <h3 style="color:var(--warning); margin-bottom:10px; font-size:16px">🔔 Ofertas Recibidas</h3>
-        <div id="offersList"></div>
-    </div>
+
     <div class="list-card"><h3 style="margin-bottom:16px">Mis Ventas</h3><div id="salesList"></div></div>
     <div class="list-card"><h3 style="margin-bottom:16px">Mis Compras</h3><div id="purchasesList"></div></div>
   </div>
@@ -278,7 +283,7 @@ let earningsChart = null;
 let activeInterval = null;
 const cashSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2012/2012-preview.mp3');
 
-// ============ MAPA CON PRIVACIDAD (GEOFENCING) ============
+// ============ MAPA ============
 let map = null;
 let markersLayer = L.layerGroup();
 let userMarker = null;
@@ -292,7 +297,6 @@ function initMap() {
 }
 
 function getObfuscatedCoords(lat, lng) {
-    // Desviación de ~200-300 metros para privacidad
     const noise = 0.003; 
     return [lat + (Math.random() - 0.5) * noise, lng + (Math.random() - 0.5) * noise];
 }
@@ -300,27 +304,14 @@ function getObfuscatedCoords(lat, lng) {
 function renderMapMarkers() {
     markersLayer.clearLayers();
     feed.forEach(item => {
-        // LÓGICA DE PRIVACIDAD: Si está vendida o es mía, veo real. Si no, veo ofuscado.
-        // Para demo: Si status es 'sold', asumimos que el usuario actual tiene acceso.
         const hasAccess = item.status === 'sold';
         const displayCoords = hasAccess ? [item.lat, item.lng] : getObfuscatedCoords(item.lat, item.lng);
         const color = item.importance === 'high' ? '#ff3b30' : (item.importance === 'medium' ? '#ffcc00' : '#4cd964');
-
         const markerHtml = `<div style="width:24px;height:24px;background:${color};border-radius:50% 50% 50% 0;transform:rotate(45deg);border:2px solid white;box-shadow:0 3px 8px rgba(0,0,0,0.3);"></div>`;
-        
-        const marker = L.marker(displayCoords, {
-            icon: L.divIcon({ className: '', html: markerHtml, iconSize: [24,24] })
-        }).addTo(markersLayer);
-        
+        const marker = L.marker(displayCoords, {icon: L.divIcon({ className: '', html: markerHtml, iconSize: [24,24] })}).addTo(markersLayer);
         marker.on('click', () => openDetail(item.id));
-
-        // Círculo de Incertidumbre para items no comprados
         if (!hasAccess) {
-            L.circle(displayCoords, {
-                color: color, fillColor: color, fillOpacity: 0.1,
-                radius: 400, // 400m de radio de incertidumbre
-                weight: 1, dashArray: '5, 5'
-            }).addTo(markersLayer);
+            L.circle(displayCoords, {color: color, fillColor: color, fillOpacity: 0.1, radius: 400, weight: 1, dashArray: '5, 5'}).addTo(markersLayer);
         }
     });
 }
@@ -331,10 +322,8 @@ function locateUser() {
         const {latitude, longitude} = pos.coords;
         map.setView([latitude, longitude], 14);
         if(userMarker) map.removeLayer(userMarker);
-        userMarker = L.marker([latitude, longitude], {
-            icon: L.divIcon({html: '<div style="background:#007aff;width:15px;height:15px;border-radius:50%;border:2px solid white;box-shadow:0 0 0 10px rgba(0,122,255,0.2)"></div>'})
-        }).addTo(map);
-        alert(`📍 Ubicación encontrada.\nMostrando noticias en tu zona.`);
+        userMarker = L.marker([latitude, longitude], {icon: L.divIcon({html: '<div style="background:#007aff;width:15px;height:15px;border-radius:50%;border:2px solid white;box-shadow:0 0 0 10px rgba(0,122,255,0.2)"></div>'})}).addTo(map);
+        alert(`📍 Ubicación encontrada.`);
     }, () => alert("Error al obtener ubicación"));
 }
 
@@ -345,13 +334,12 @@ function generateWatermark() {
   return `<div class="watermark-overlay">${cells}</div>`;
 }
 
-function getTrustBadge(score) {
-    return score > 90 ? `<div class="trust-badge">🛡️ GPS VERIFICADO</div>` : '';
-}
+function getTrustBadge(score) { return score > 90 ? `<div class="trust-badge">🛡️ GPS VERIFICADO</div>` : ''; }
 
 function renderGrid(id, items) {
   const container = document.getElementById(id);
   if(!container) return;
+  if(items.length === 0) { container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-secondary)">No hay noticias disponibles.</div>'; return; }
   container.innerHTML = items.map(item => `
     <div class="news-card" onclick="openDetail(${item.id})">
       <div class="news-card-image">
@@ -412,23 +400,17 @@ function openDetail(id) {
 function buyDirect(id) {
     const item = feed.find(x => x.id === id);
     if(currentUser.balance < item.price) return alert("Saldo insuficiente");
-    
-    // Transacción
     currentUser.balance -= item.price;
-    item.status = 'sold'; // Simular venta al usuario
+    item.status = 'sold'; 
     purchases.unshift({title: item.title, price: item.price, date: new Date().toLocaleString(), img: item.img});
-    
-    saveData();
-    renderMapMarkers(); // Actualizar mapa para mostrar ubicación exacta
-    closeModal();
-    renderAllViews();
-    alert("✅ Compra exitosa. La ubicación exacta ha sido revelada en el mapa.");
+    saveData(); renderMapMarkers(); closeModal(); renderAllViews();
+    alert("✅ Compra exitosa. Ubicación revelada.");
 }
 
-// ============ SUBIR NOTICIA (VERIFICACIÓN) ============
+// ============ SUBIR NOTICIA (FORMULARIO MEJORADO) ============
 document.getElementById('uploadForm').addEventListener('submit', (e) => {
     e.preventDefault();
-    const btn = e.target.querySelector('button');
+    const btn = document.getElementById('btnUpload');
     const originalText = btn.textContent;
     btn.textContent = "🛰️ Verificando satélites...";
     btn.disabled = true;
@@ -440,46 +422,36 @@ document.getElementById('uploadForm').addEventListener('submit', (e) => {
         const lic = document.getElementById('licInput').value;
         
         const newItem = {
-            id: Date.now(),
-            title: title,
-            price: price,
-            lat: -34.6037 + (Math.random()-0.5)*0.05,
-            lng: -58.3816 + (Math.random()-0.5)*0.05,
+            id: Date.now(), title: title, price: price,
+            lat: -34.6037 + (Math.random()-0.5)*0.05, lng: -58.3816 + (Math.random()-0.5)*0.05,
             img: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800',
-            licenseType: lic,
-            status: 'for_sale',
-            hashtags: tags,
-            importance: 'high',
-            trustScore: 95 // Simulado alto
+            licenseType: lic, status: 'for_sale', hashtags: tags, importance: 'high', trustScore: 95
         };
         
         feed.unshift(newItem);
-        saveData();
-        renderMapMarkers();
-        renderAllViews();
+        saveData(); renderMapMarkers(); renderAllViews();
+        
+        // RESET COMPLETO
         e.target.reset();
-        closeModal();
-        showView('home');
+        document.querySelectorAll('.license-option').forEach(o => o.classList.remove('selected'));
+        document.getElementById('opt-nonexclusive').classList.add('selected');
+        document.getElementById('licInput').value = 'nonexclusive';
+        closeModal(); showView('home');
         
         btn.textContent = originalText;
         btn.disabled = false;
-        alert("✅ Noticia subida y verificada criptográficamente.");
+        alert("✅ Noticia subida y verificada exitosamente.");
     }, 1500);
 });
 
-// ============ NEGOCIACIÓN, VISTAS, ETC ============
+// ============ NEGOCIACIÓN ============
 function makeOffer(itemId, amount) {
     const expiresAt = Date.now() + (15 * 60 * 1000);
     negotiations.push({ id: Date.now(), newsId: itemId, amount, status: 'pending', expiresAt });
     feed.find(x => x.id === itemId).status = 'negotiating';
-    saveData();
-    document.getElementById('navNotif').classList.add('active');
-    closeModal(); renderAllViews();
+    saveData(); document.getElementById('navNotif').classList.add('active'); closeModal(); renderAllViews();
 }
-function sendManualOffer(id) {
-    const val = Number(document.getElementById('cOffer').value);
-    if(val > 0) makeOffer(id, val);
-}
+function sendManualOffer(id) { const val = Number(document.getElementById('cOffer').value); if(val>0) makeOffer(id, val); }
 function showSellerPanel(negId) {
     const neg = negotiations.find(n => n.id === negId);
     const item = feed.find(f => f.id === neg.newsId);
@@ -500,27 +472,30 @@ function acceptOffer(id) {
     item.status = 'sold'; neg.status = 'accepted';
     currentUser.balance += neg.amount;
     salesHistory.unshift({title: item.title, amount: neg.amount, date: new Date().toLocaleString(), img: item.img});
-    saveData();
-    closeModal(); renderAllViews();
+    saveData(); closeModal(); renderAllViews();
 }
 
+// ============ CONTROL DE VISTAS ============
 function showView(name) {
     document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
     document.getElementById(`view-${name}`).style.display = 'block';
+    
     if(name === 'home') setTimeout(() => { if(!map) initMap(); else { map.invalidateSize(); renderMapMarkers(); } }, 100);
     if(name === 'sales') { renderSales(); if(!earningsChart) initChart(); }
     if(name === 'discover') { renderGrid('discoverGrid', feed); renderTrends(); }
     if(name === 'upload') document.getElementById('sugTags').textContent = trendTags.slice(0,3).join(", ");
     if(name === 'accounts') renderSubs();
     if(name === 'wallet') updateWalletUI();
+    
+    // Highlight Nav
+    const mapNav = {'home':0, 'discover':1, 'upload':2, 'sales':3, 'wallet':4};
+    if(mapNav[name] !== undefined) document.querySelectorAll('.nav-item')[mapNav[name]].classList.add('active');
 }
 
-function updateWalletUI() {
-    document.getElementById('walletBalance').textContent = `$${currentUser.balance}`;
-}
+function updateWalletUI() { document.getElementById('walletBalance').textContent = `$${currentUser.balance}`; }
 
-// Chart, Trends, Aux
+// ============ CHART & LISTS ============
 function initChart() {
     const ctx = document.getElementById('earningsChart').getContext('2d');
     earningsChart = new Chart(ctx, {
@@ -531,10 +506,20 @@ function initChart() {
 }
 function updateChart(p, btn) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
-    if(p==='year') { earningsChart.data.labels=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; earningsChart.data.datasets[0].data=[1200,1500,1100,1700,1900,2400,2000,2100,2300,2700,2500,3400]; }
-    else { earningsChart.data.labels=['Lun','Mar','Mie','Jue','Vie','Sab','Dom']; earningsChart.data.datasets[0].data=[50,90,45,130,110,200,75]; }
+    if(p==='month') { 
+        // CORRECCIÓN: MES = SEMANAS
+        earningsChart.data.labels = ['Sem 1','Sem 2','Sem 3','Sem 4']; 
+        earningsChart.data.datasets[0].data = [450, 800, 600, 1000]; 
+    } else if(p==='year') { 
+        earningsChart.data.labels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; 
+        earningsChart.data.datasets[0].data = [1200,1500,1100,1700,1900,2400,2000,2100,2300,2700,2500,3400]; 
+    } else { 
+        earningsChart.data.labels = ['Lun','Mar','Mie','Jue','Vie','Sab','Dom']; 
+        earningsChart.data.datasets[0].data = [50,90,45,130,110,200,75]; 
+    }
     earningsChart.update();
 }
+
 function renderSales() {
     const pending = negotiations.filter(n => n.status === 'pending');
     document.getElementById('pendingOffersCard').style.display = pending.length ? 'block' : 'none';
@@ -542,16 +527,24 @@ function renderSales() {
     document.getElementById('salesList').innerHTML = salesHistory.map(s => `<div class="list-item"><img src="${s.img}" class="list-item-image"><div class="list-item-content"><div class="list-item-title">${s.title}</div><small>${s.date}</small></div><strong style="color:var(--success)">+$${s.amount}</strong></div>`).join('');
     document.getElementById('purchasesList').innerHTML = purchases.map(p => `<div class="list-item"><img src="${p.img}" class="list-item-image"><div class="list-item-content"><div class="list-item-title">${p.title}</div><small>${p.date}</small></div><strong style="color:var(--accent)">-$${p.price}</strong></div>`).join('');
 }
+
 function renderTrends() { document.getElementById('trendingTags').innerHTML = trendTags.map(t => `<span style="display:inline-block; background:rgba(255,59,48,0.1); padding:6px 15px; border-radius:20px; color:var(--accent); margin-right:10px; cursor:pointer" onclick="document.getElementById('searchInput').value='${t}'; showView('discover')">${t}</span>`).join(''); }
 function renderSubs() { document.getElementById('subaccountsList').innerHTML = subaccounts.map(s => `<div class="list-item"><img src="${s.img}" class="list-item-image" style="border-radius:50%; width:50px; height:50px"><div class="list-item-content"><div>${s.name}</div><small>${s.files} archivos</small></div></div>`).join(''); }
 function selectLic(el, type) { document.querySelectorAll('.license-option').forEach(o => o.classList.remove('selected')); el.classList.add('selected'); document.getElementById('licInput').value = type; }
 function closeModal() { document.getElementById('modal').classList.remove('active'); clearInterval(activeInterval); }
 function logout() { if(confirm('¿Salir?')) location.reload(); }
 
-// INIT
+// INIT (CORRECCIÓN HOME)
 document.getElementById('themeToggle').onclick = () => document.body.classList.toggle('light');
 document.getElementById('searchInput').oninput = (e) => { const v = e.target.value.toLowerCase(); renderGrid('discoverGrid', feed.filter(i => i.title.toLowerCase().includes(v) || i.hashtags.toLowerCase().includes(v))); };
-showView('home');
+
+// FORZAR RENDERIZADO INICIAL
+window.onload = () => {
+    // Si localStorage esta vacío, aseguramos datos
+    if(feed.length === 0) { feed = defaultFeed; saveData(); }
+    showView('home'); 
+    renderGrid('homeGrid', feed);
+};
 </script>
 </body>
 </html>
