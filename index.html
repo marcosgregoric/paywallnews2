@@ -250,24 +250,31 @@ header {
   transform: scale(1.05);
 }
 
+/* --- ESTÉTICA DE LA MARCA DE AGUA (Actualizado) --- */
 .watermark-overlay {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
   pointer-events: none;
   user-select: none;
+  overflow: hidden;
+  z-index: 5;
 }
 
 .watermark-text {
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 800;
   color: var(--watermark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transform: rotate(-25deg);
   text-transform: uppercase;
-  letter-spacing: 2px;
-  text-shadow: 0 0 20px rgba(0,0,0,0.1);
+  letter-spacing: 1px;
+  white-space: nowrap;
+  opacity: 0.6;
 }
 
 .license-badge {
@@ -1305,11 +1312,14 @@ function getStatusBadge(status) {
 function renderNewsCard(item) {
   const trendingBadge = item.trending ? '<span style="background: rgba(255, 59, 48, 0.15); color: var(--accent); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-left: 8px;">🔥 TRENDING</span>' : '';
   
+  // Generar la marca de agua dinámica (9 celdas)
+  const watermarkHTML = Array(9).fill('<div class="watermark-text">Paywall News</div>').join('');
+
   return `
     <div class="news-card" onclick="openDetail(${item.id})">
       <div class="news-card-image">
         <img src="${item.img}" alt="${item.title}">
-        ${item.status !== 'sold' ? '<div class="watermark-overlay"><div class="watermark-text">Protected</div></div>' : ''}
+        ${item.status !== 'sold' ? `<div class="watermark-overlay">${watermarkHTML}</div>` : ''}
         ${getLicenseBadge(item.licenseType)}
         <div class="price-badge">$${item.price}</div>
       </div>
@@ -1430,8 +1440,15 @@ function openDetail(itemId) {
   }
   
   document.getElementById('modalTitle').textContent = item.title;
+  
+  // Imagen en modal con marca de agua
+  const watermarkHTML = Array(9).fill('<div class="watermark-text">Paywall News</div>').join('');
+
   document.getElementById('modalBody').innerHTML = `
-    <img src="${item.img}" class="modal-image">
+    <div style="position:relative; width:100%; border-radius:12px; overflow:hidden; margin-bottom:20px;">
+        <img src="${item.img}" class="modal-image" style="margin-bottom:0">
+        ${item.status !== 'sold' ? `<div class="watermark-overlay">${watermarkHTML}</div>` : ''}
+    </div>
     
     <div class="info-section">
       <div class="info-row">
@@ -1485,7 +1502,7 @@ function buyNow(itemId) {
   closeModal();
 }
 
-// ========== SISTEMA DE NEGOCIACIÓN ==========
+// ========== SISTEMA DE NEGOCIACIÓN (PARTE 2 INTEGRADA) ==========
 function makeOffer(itemId, amount) {
   createNegotiation(itemId, amount);
 }
@@ -1696,7 +1713,8 @@ document.querySelectorAll('.license-option').forEach(option => {
   };
 });
 
-document.querySelector('.license-option').classList.add('selected');
+// Inicializar selección
+if(document.querySelector('.license-option')) document.querySelector('.license-option').classList.add('selected');
 
 document.getElementById('uploadForm')?.addEventListener('submit', function(e) {
   e.preventDefault();
@@ -1767,39 +1785,37 @@ function renderSales() {
   
   if (userItems.length === 0) {
     salesList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div><div class="empty-state-text">No has subido contenido aún</div></div>';
-    return;
+  } else {
+    salesList.innerHTML = userItems.map(item => `
+      <div class="list-item">
+        <img src="${item.img}" class="list-item-image">
+        <div class="list-item-content">
+          <div class="list-item-title">${item.title}</div>
+          <div class="list-item-meta">${item.hashtags}</div>
+        </div>
+        <div class="list-item-actions">
+          ${getStatusBadge(item.status)}
+          <div style="font-weight: 700;">$${item.price}</div>
+        </div>
+      </div>
+    `).join('');
   }
-  
-  salesList.innerHTML = userItems.map(item => `
-    <div class="list-item">
-      <img src="${item.img}" class="list-item-image">
-      <div class="list-item-content">
-        <div class="list-item-title">${item.title}</div>
-        <div class="list-item-meta">${item.hashtags}</div>
-      </div>
-      <div class="list-item-actions">
-        ${getStatusBadge(item.status)}
-        <div style="font-weight: 700;">$${item.price}</div>
-      </div>
-    </div>
-  `).join('');
   
   const purchasesList = document.getElementById('purchasesList');
   if (purchases.length === 0) {
     purchasesList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🛒</div><div class="empty-state-text">No has comprado contenido aún</div></div>';
-    return;
-  }
-  
-  purchasesList.innerHTML = purchases.map(p => `
-    <div class="list-item">
-      <img src="https://images.unsplash.com/photo-1586339949216-35c2747cc36d?w=200&h=150&fit=crop&sig=${p.id}" class="list-item-image">
-      <div class="list-item-content">
-        <div class="list-item-title">${p.title}</div>
-        <div class="list-item-meta">Comprado: ${p.date}</div>
+  } else {
+    purchasesList.innerHTML = purchases.map(p => `
+      <div class="list-item">
+        <img src="https://images.unsplash.com/photo-1586339949216-35c2747cc36d?w=200&h=150&fit=crop&sig=${p.id}" class="list-item-image">
+        <div class="list-item-content">
+          <div class="list-item-title">${p.title}</div>
+          <div class="list-item-meta">Comprado: ${p.date}</div>
+        </div>
+        <div style="font-weight: 700; color: var(--accent);">$${p.price}</div>
       </div>
-      <div style="font-weight: 700; color: var(--accent);">$${p.price}</div>
-    </div>
-  `).join('');
+    `).join('');
+  }
 }
 
 // ============ NAVEGACIÓN ============
@@ -1843,14 +1859,14 @@ function logout() {
   }
 }
 function addSubaccount() {
-alert('➕ Función de agregar subcuenta (próximamente)');
+  alert('➕ Función de agregar subcuenta (próximamente)');
 }
+
 // ============ INIT ============
 renderAllViews();
 document.getElementById('modal').addEventListener('click', function(e) {
-if (e.target === this) closeModal();
+  if (e.target === this) closeModal();
 });
 </script>
 </body>
 </html>
-```
