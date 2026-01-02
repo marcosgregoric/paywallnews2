@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Paywall News - Marketplace Profesional</title>
+<title>Paywall News - Simulador v4.0</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -35,6 +35,12 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 .map-legend { position: absolute; left: 16px; bottom: 16px; background: var(--overlay); backdrop-filter: blur(10px); padding: 10px 15px; border-radius: 12px; font-size: 12px; z-index: 1000; color: white; display: flex; gap: 15px; }
 .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
 
+/* LOGIN SCREEN (NUEVO) */
+#login-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+.role-card { background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: 20px; width: 100%; max-width: 320px; text-align: center; cursor: pointer; transition: 0.3s; margin-bottom: 20px; }
+.role-card:hover { transform: translateY(-5px); border-color: var(--accent); }
+.role-icon { font-size: 50px; margin-bottom: 15px; }
+
 /* GRID NOTICIAS */
 .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 24px; }
 .news-card { background: var(--card); border-radius: 16px; overflow: hidden; position: relative; cursor: pointer; transition: 0.3s; border: 1px solid var(--border); }
@@ -43,20 +49,17 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 .news-card-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
 .news-card:hover img { transform: scale(1.05); }
 
-/* MARCA DE AGUA */
 .watermark-overlay { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); pointer-events: none; z-index: 5; overflow: hidden; }
 .watermark-cell { display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-25deg); color: var(--watermark); text-align: center; }
 .wm-brand { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
 .wm-user { font-size: 7px; font-weight: 400; margin-top: 2px; }
 
-/* BADGES */
 .price-badge { position: absolute; top: 12px; right: 12px; background: var(--overlay); color: white; padding: 6px 10px; border-radius: 8px; font-weight: 700; font-size: 13px; z-index: 10; backdrop-filter: blur(5px); }
 .license-badge { position: absolute; top: 12px; left: 12px; padding: 5px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; z-index: 10; text-transform: uppercase; backdrop-filter: blur(5px); }
 .lic-exclusive { background: linear-gradient(135deg, #ffd700, #ffc107); color: #664d00; }
 .lic-nonexclusive { background: rgba(0, 122, 255, 0.9); color: white; }
 .trust-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; background: rgba(52, 199, 89, 0.15); color: var(--success); border: 1px solid var(--success); margin-top: 5px; }
 
-/* COMPONENTES */
 .stats-container { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 24px; border: 1px solid var(--border); }
 .chart-wrapper { height: 180px; width: 100%; margin-top: 15px; }
 .tab-btn { padding: 5px 12px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s; }
@@ -67,7 +70,6 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 .list-item-image { width: 70px; height: 50px; border-radius: 8px; object-fit: cover; }
 .list-item-content { flex: 1; }
 
-/* NEGOCIACIÓN */
 .offer-section { background: var(--bg); border: 2px solid var(--gold); border-radius: 12px; padding: 20px; margin-top: 20px; }
 .quick-offers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
 .quick-offer-btn { background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 10px; text-align: center; cursor: pointer; transition: 0.2s; }
@@ -75,7 +77,6 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 .timer-box { background: rgba(255, 59, 48, 0.1); padding: 12px; border-radius: 10px; text-align: center; margin: 15px 0; border: 1px solid var(--accent); }
 .timer-countdown { font-family: monospace; font-size: 26px; font-weight: 700; color: var(--accent); }
 
-/* FORMULARIOS Y BOTONES */
 .form-input { width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 15px; margin-bottom: 10px; }
 .license-option { padding: 16px; border-radius: 12px; border: 2px solid var(--border); cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
 .license-option.selected { border-color: var(--accent); background: rgba(255, 59, 48, 0.05); }
@@ -85,23 +86,37 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 .btn-secondary { background: var(--border); color: var(--text); }
 .icon-btn { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: transparent; border: none; font-size: 20px; }
 
-/* MODAL */
 .modal { position: fixed; inset: 0; background: var(--overlay); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 20px; }
 .modal.active { display: flex; }
 .modal-content { background: var(--card); border-radius: 20px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
 
-/* NAV */
 .bottom-nav { position: fixed; left: 16px; right: 16px; bottom: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; display: flex; padding: 10px; z-index: 100; box-shadow: 0 8px 32px var(--shadow); }
 .nav-item { flex: 1; text-align: center; padding: 5px; cursor: pointer; font-size: 11px; color: var(--text-secondary); position: relative; }
 .nav-item.active { color: var(--accent); font-weight: 700; }
 .nav-item-icon { font-size: 20px; margin-bottom: 4px; }
 .notif-badge { position: absolute; top: 2px; right: 30%; width: 10px; height: 10px; background: var(--accent); border-radius: 50%; display: none; border: 2px solid var(--card); }
 .notif-badge.active { display: block; animation: pulse 2s infinite; }
-@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
 .view { display: none; } .view.active { display: block; }
 </style>
 </head>
 <body class="dark">
+
+<div id="login-screen">
+    <div style="font-size:40px; margin-bottom:10px">📰</div>
+    <h1 style="margin-bottom:30px">Paywall News</h1>
+    
+    <div class="role-card" onclick="loginAs('witness')">
+        <div class="role-icon">📱</div>
+        <h3>Soy Testigo</h3>
+        <p style="color:var(--text-secondary); font-size:13px">Estoy en el lugar de los hechos.<br>Quiero vender mi contenido.</p>
+    </div>
+
+    <div class="role-card" onclick="loginAs('media')">
+        <div class="role-icon">📺</div>
+        <h3>Soy Medio</h3>
+        <p style="color:var(--text-secondary); font-size:13px">Busco noticias exclusivas.<br>Quiero comprar licencias.</p>
+    </div>
+</div>
 
 <header>
   <div class="brand"><span style="font-size: 24px;">📰</span><span>Paywall News</span></div>
@@ -199,36 +214,31 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
     <div class="list-card" style="text-align:center; padding:40px 20px">
         <div style="font-size:48px; margin-bottom:10px">💰</div>
         <div style="color:var(--text-secondary)">Saldo disponible</div>
-        <div id="walletBalance" style="font-size:42px; font-weight:800; margin:10px 0">$250</div>
+        <div id="walletBalance" style="font-size:42px; font-weight:800; margin:10px 0"></div>
         <button class="btn btn-primary" onclick="alert('Retiro iniciado')">💸 Retirar fondos</button>
     </div>
     <div class="list-card">
-        <h3>Historial (Persistente)</h3>
-        <div class="list-item"><div class="list-item-content"><div>Saldo Inicial</div><small>Registro</small></div><strong>+$250</strong></div>
+        <h3>Historial</h3>
+        <div class="list-item"><div class="list-item-content"><div>Registro</div><small>Cuenta nueva</small></div><strong>$0</strong></div>
     </div>
   </div>
 
   <div id="view-profile" class="view">
     <div class="section-header"><div class="section-title">Mi Perfil</div></div>
     <div class="list-card" style="text-align:center">
-        <div style="font-size:60px">👤</div>
-        <h2 id="userNameDisplay">Juan Pérez</h2>
-        <p style="color:var(--success)">Verificado ✓</p>
+        <div style="font-size:60px" id="userAvatar">👤</div>
+        <h2 id="userNameDisplay">Usuario</h2>
+        <p id="userRoleDisplay" style="color:var(--success)">Rol</p>
     </div>
-    <div class="list-card" onclick="showView('accounts')" style="cursor:pointer">
-        <div class="list-item" style="border:none; padding:0">
-            <div style="font-size:24px; margin-right:15px">👥</div>
-            <div class="list-item-content"><div class="list-item-title">Cuentas vinculadas</div><div class="list-item-meta">Gestionar equipo</div></div>
-            <div>›</div>
-        </div>
+    <div class="list-card" onclick="logout()" style="cursor:pointer; text-align:center; color:var(--accent)">
+        🔄 <strong>Cambiar de Usuario</strong>
     </div>
-    <div class="list-card"><button class="btn btn-secondary" onclick="resetData()">🔁 Resetear Demo</button></div>
+    <div class="list-card"><button class="btn btn-secondary" onclick="resetData()">🔁 Resetear Base de Datos</button></div>
   </div>
 
   <div id="view-accounts" class="view">
     <div class="section-header"><div class="section-title">Subcuentas</div></div>
     <div class="list-card" id="subaccountsList"></div>
-    <button class="btn btn-primary" onclick="alert('Nueva subcuenta')">➕ Agregar</button>
   </div>
 </div>
 
@@ -252,36 +262,71 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// ============ PERSISTENCIA Y ESTADO ============
-const defaultFeed = [
-  {id:1, title:'Choque en Av. Mitre', price:50, lat:-34.6037, lng:-58.3816, img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#accidente #transito', importance:'high', trustScore: 98},
-  {id:2, title:'Incendio en Fábrica', price:150, lat:-34.6070, lng:-58.3772, img:'https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#urgente #quilmes', importance:'medium', trustScore: 85},
-  {id:3, title:'Robo en Joyería (Exclusivo)', price:600, lat:-34.5900, lng:-58.3800, img:'https://images.unsplash.com/photo-1590856029826-c7a73142bbf1?w=800', licenseType:'exclusive', status:'for_sale', hashtags: '#seguridad #exclusivo', importance:'high', trustScore: 99}
-];
-const defaultUser = { name: "Juan Pérez", balance: 250 };
-const trendTags = ["#accidente", "#politica", "#transito", "#quilmes", "#urgente"];
+// ============ BASE DE DATOS MULTI-USUARIO ============
+const usersDB = {
+    'witness': { id: 'witness', name: 'Matías (Testigo)', role: 'Testigo', balance: 50, avatar: '📱' },
+    'media': { id: 'media', name: 'InfoGlobal (Medio)', role: 'Medio', balance: 5000, avatar: '📺' }
+};
 
-// Cargar estado
+// Datos iniciales: Matías subió noticias. InfoGlobal no ha comprado nada.
+const defaultFeed = [
+  {id:1, ownerId:'witness', title:'Choque en Av. Mitre', price:50, lat:-34.6037, lng:-58.3816, img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#accidente #transito', importance:'high', trustScore: 98, buyers:[]},
+  {id:2, ownerId:'witness', title:'Incendio en Fábrica', price:150, lat:-34.6070, lng:-58.3772, img:'https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#urgente #quilmes', importance:'medium', trustScore: 85, buyers:[]},
+  {id:3, ownerId:'witness', title:'Robo en Joyería (Exclusivo)', price:600, lat:-34.5900, lng:-58.3800, img:'https://images.unsplash.com/photo-1590856029826-c7a73142bbf1?w=800', licenseType:'exclusive', status:'for_sale', hashtags: '#seguridad #exclusivo', importance:'high', trustScore: 99, buyers:[]}
+];
+
 let feed = JSON.parse(localStorage.getItem('pw_feed')) || defaultFeed;
-let currentUser = JSON.parse(localStorage.getItem('pw_user')) || defaultUser;
-let salesHistory = JSON.parse(localStorage.getItem('pw_sales')) || [];
-let purchases = JSON.parse(localStorage.getItem('pw_purchases')) || [];
+let users = JSON.parse(localStorage.getItem('pw_users')) || usersDB;
 let negotiations = JSON.parse(localStorage.getItem('pw_negs')) || [];
-let subaccounts = [{name: 'Dron Norte', files: 12, img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'}, {name: 'Cámara 2', files: 7, img: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100'}];
+let activeUser = null; // Se define al loguear
+
+// ============ SISTEMA DE LOGIN ============
+function loginAs(userId) {
+    activeUser = users[userId];
+    localStorage.setItem('pw_active_id', userId);
+    document.getElementById('login-screen').style.display = 'none';
+    initApp();
+}
+
+function logout() {
+    localStorage.removeItem('pw_active_id');
+    location.reload();
+}
+
+function initApp() {
+    updateProfileUI();
+    updateWalletUI();
+    showView('home');
+    renderGrid('homeGrid', feed);
+}
+
+// Verificar si ya hay sesión
+const storedId = localStorage.getItem('pw_active_id');
+if (storedId && users[storedId]) {
+    activeUser = users[storedId];
+    document.getElementById('login-screen').style.display = 'none';
+    initApp();
+}
 
 function saveData() {
     localStorage.setItem('pw_feed', JSON.stringify(feed));
-    localStorage.setItem('pw_user', JSON.stringify(currentUser));
-    localStorage.setItem('pw_sales', JSON.stringify(salesHistory));
-    localStorage.setItem('pw_purchases', JSON.stringify(purchases));
+    localStorage.setItem('pw_users', JSON.stringify(users));
     localStorage.setItem('pw_negs', JSON.stringify(negotiations));
     updateWalletUI();
 }
+
 function resetData() { localStorage.clear(); location.reload(); }
 
-let earningsChart = null;
-let activeInterval = null;
-const cashSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2012/2012-preview.mp3');
+// ============ UI UPDATES ============
+function updateProfileUI() {
+    document.getElementById('userNameDisplay').textContent = activeUser.name;
+    document.getElementById('userRoleDisplay').textContent = activeUser.role;
+    document.getElementById('userAvatar').textContent = activeUser.avatar;
+}
+
+function updateWalletUI() {
+    document.getElementById('walletBalance').textContent = `$${activeUser.balance}`;
+}
 
 // ============ MAPA ============
 let map = null;
@@ -304,13 +349,19 @@ function getObfuscatedCoords(lat, lng) {
 function renderMapMarkers() {
     markersLayer.clearLayers();
     feed.forEach(item => {
-        const hasAccess = item.status === 'sold';
-        const displayCoords = hasAccess ? [item.lat, item.lng] : getObfuscatedCoords(item.lat, item.lng);
+        // LÓGICA DE VISIBILIDAD MULTI-USUARIO:
+        // Veo exacto SI: Soy el dueño O Ya la compré.
+        const isOwner = item.ownerId === activeUser.id;
+        const iBoughtIt = item.buyers.includes(activeUser.id);
+        const canSeeExact = isOwner || iBoughtIt || item.status === 'sold' && iBoughtIt; // Simplificado
+
+        const displayCoords = canSeeExact ? [item.lat, item.lng] : getObfuscatedCoords(item.lat, item.lng);
         const color = item.importance === 'high' ? '#ff3b30' : (item.importance === 'medium' ? '#ffcc00' : '#4cd964');
         const markerHtml = `<div style="width:24px;height:24px;background:${color};border-radius:50% 50% 50% 0;transform:rotate(45deg);border:2px solid white;box-shadow:0 3px 8px rgba(0,0,0,0.3);"></div>`;
         const marker = L.marker(displayCoords, {icon: L.divIcon({ className: '', html: markerHtml, iconSize: [24,24] })}).addTo(markersLayer);
         marker.on('click', () => openDetail(item.id));
-        if (!hasAccess) {
+        
+        if (!canSeeExact) {
             L.circle(displayCoords, {color: color, fillColor: color, fillOpacity: 0.1, radius: 400, weight: 1, dashArray: '5, 5'}).addTo(markersLayer);
         }
     });
@@ -323,14 +374,14 @@ function locateUser() {
         map.setView([latitude, longitude], 14);
         if(userMarker) map.removeLayer(userMarker);
         userMarker = L.marker([latitude, longitude], {icon: L.divIcon({html: '<div style="background:#007aff;width:15px;height:15px;border-radius:50%;border:2px solid white;box-shadow:0 0 0 10px rgba(0,122,255,0.2)"></div>'})}).addTo(map);
-        alert(`📍 Ubicación encontrada.`);
-    }, () => alert("Error al obtener ubicación"));
+    });
 }
 
-// ============ RENDER UI ============
+// ============ GRID & LISTS ============
 function generateWatermark() {
+  // Marca de agua muestra el nombre del DUEÑO de la noticia
   let cells = '';
-  for(let i=0; i<9; i++) cells += `<div class="watermark-cell"><span class="wm-brand">Paywall News</span><span class="wm-user">${currentUser.name}</span></div>`;
+  for(let i=0; i<9; i++) cells += `<div class="watermark-cell"><span class="wm-brand">Paywall News</span><span class="wm-user">Propiedad Protegida</span></div>`;
   return `<div class="watermark-overlay">${cells}</div>`;
 }
 
@@ -339,20 +390,27 @@ function getTrustBadge(score) { return score > 90 ? `<div class="trust-badge">�
 function renderGrid(id, items) {
   const container = document.getElementById(id);
   if(!container) return;
-  if(items.length === 0) { container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-secondary)">No hay noticias disponibles.</div>'; return; }
+  if(items.length === 0) { container.innerHTML = '<div style="padding:20px;color:var(--text-secondary)">Nada por aquí.</div>'; return; }
   
   container.innerHTML = items.map(item => {
-    // FIX 2: ESTADO VENDIDO
     let statusLabel = '● Disponible';
     let statusColor = 'var(--success)';
+    
+    // Estados visuales
     if(item.status === 'negotiating') { statusLabel = '● Negociando'; statusColor = 'var(--warning)'; }
-    if(item.status === 'sold') { statusLabel = '● Vendido'; statusColor = 'var(--muted)'; }
+    if(item.status === 'sold' && item.licenseType === 'exclusive') { statusLabel = '● Vendido (Exclusiva)'; statusColor = 'var(--muted)'; }
+    
+    // Si yo la compré, mostrar "Comprada"
+    if(item.buyers.includes(activeUser.id)) { statusLabel = '✅ Adquirida'; statusColor = 'var(--info)'; }
+
+    // Watermark lógica: Si NO soy dueño Y NO la compré => Mostrar WM
+    const showWm = (item.ownerId !== activeUser.id) && !item.buyers.includes(activeUser.id);
 
     return `
     <div class="news-card" onclick="openDetail(${item.id})">
       <div class="news-card-image">
         <img src="${item.img}">
-        ${item.status !== 'sold' ? generateWatermark() : ''}
+        ${showWm ? generateWatermark() : ''}
         <div class="price-badge">$${item.price}</div>
         <div class="license-badge ${item.licenseType === 'exclusive' ? 'lic-exclusive' : 'lic-nonexclusive'}">${item.licenseType === 'exclusive' ? '🏆' : '🌐'}</div>
       </div>
@@ -366,62 +424,94 @@ function renderGrid(id, items) {
   }).join('');
 }
 
-// ============ DETALLE Y COMPRA ============
+// ============ DETALLES Y ACCIONES ============
 function openDetail(id) {
   const item = feed.find(x => x.id === id);
   document.getElementById('modalTitle').textContent = item.title;
-  const isSold = item.status === 'sold';
+  
+  const isOwner = item.ownerId === activeUser.id;
+  const iBoughtIt = item.buyers.includes(activeUser.id);
+  const isExclusiveSold = item.status === 'sold' && item.licenseType === 'exclusive';
+  
+  const showWm = !isOwner && !iBoughtIt;
   
   let ui = `<div style="position:relative; border-radius:12px; overflow:hidden; margin-bottom:15px">
                 <img src="${item.img}" style="width:100%">
-                ${!isSold ? generateWatermark() : ''}
+                ${showWm ? generateWatermark() : ''}
             </div>
             ${getTrustBadge(item.trustScore || 0)}
             <p style="margin:10px 0; color:var(--text-secondary)">${item.hashtags}</p>`;
 
-  if(isSold) {
-      ui += `<div class="list-card" style="text-align:center; border-color:var(--success); background:rgba(52,199,89,0.1)">
-                <h3 style="color:var(--success)">✅ Contenido Adquirido</h3>
-                <p>Ubicación exacta revelada en el mapa.</p>
+  // PANEL DE ACCIÓN SEGÚN ROL
+  if (isOwner) {
+      ui += `<div class="list-card" style="text-align:center; background:rgba(10, 132, 255, 0.1); border-color:var(--info)">
+                <h3>📝 Tu Noticia</h3>
+                <p>Eres el propietario. Gestiona ofertas en la pestaña "Ventas".</p>
              </div>`;
-  } else if(item.licenseType === 'exclusive') {
-      ui += `<button class="btn btn-gold" onclick="buyDirect(${item.id})">COMPRAR EXCLUSIVIDAD $${item.price}</button>`;
+  } else if (iBoughtIt) {
+      ui += `<div class="list-card" style="text-align:center; background:rgba(52, 199, 89, 0.1); border-color:var(--success)">
+                <h3 style="color:var(--success)">✅ Contenido Desbloqueado</h3>
+                <p>Ubicación exacta visible en el mapa.</p>
+             </div>`;
+  } else if (isExclusiveSold) {
+      ui += `<div class="list-card" style="text-align:center; background:var(--bg)">
+                <p>🔒 Esta noticia exclusiva ya fue vendida a otro medio.</p>
+             </div>`;
   } else {
-      ui += `
-        <button class="btn btn-primary" style="margin-bottom:15px" onclick="buyDirect(${item.id})">Comprar Licencia Compartida $${item.price}</button>
-        <div class="offer-section">
-            <h4 style="text-align:center; color:var(--gold); margin-bottom:10px">💎 Negociar</h4>
-            <div class="quick-offers">
-                <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*2})"><strong>X2</strong><br>$${item.price*2}</div>
-                <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*3})"><strong>X3</strong><br>$${item.price*3}</div>
-                <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*4})"><strong>X4</strong><br>$${item.price*4}</div>
-            </div>
-            <div style="display:flex; gap:10px">
-                <input type="number" id="cOffer" placeholder="Monto..." class="form-input" style="margin:0">
-                <button class="btn btn-gold" style="width:auto" onclick="sendManualOffer(${item.id})">Enviar</button>
-            </div>
-        </div>`;
+      // COMPRADOR POTENCIAL
+      if(item.licenseType === 'exclusive') {
+        ui += `<button class="btn btn-gold" onclick="buyDirect(${item.id})">COMPRAR EXCLUSIVIDAD $${item.price}</button>`;
+      } else {
+        ui += `<button class="btn btn-primary" style="margin-bottom:15px" onclick="buyDirect(${item.id})">Comprar Licencia Compartida $${item.price}</button>
+               <div class="offer-section">
+                   <h4 style="text-align:center; color:var(--gold); margin-bottom:10px">💎 Negociar</h4>
+                   <div class="quick-offers">
+                       <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*2})"><strong>X2</strong><br>$${item.price*2}</div>
+                       <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*3})"><strong>X3</strong><br>$${item.price*3}</div>
+                       <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*4})"><strong>X4</strong><br>$${item.price*4}</div>
+                   </div>
+                   <div style="display:flex; gap:10px">
+                       <input type="number" id="cOffer" placeholder="Monto..." class="form-input" style="margin:0">
+                       <button class="btn btn-gold" style="width:auto" onclick="sendManualOffer(${item.id})">Enviar</button>
+                   </div>
+               </div>`;
+      }
   }
+
   document.getElementById('modalBody').innerHTML = ui;
   document.getElementById('modal').classList.add('active');
 }
 
 function buyDirect(id) {
     const item = feed.find(x => x.id === id);
-    if(currentUser.balance < item.price) return alert("Saldo insuficiente");
-    currentUser.balance -= item.price;
-    item.status = 'sold'; 
-    purchases.unshift({title: item.title, price: item.price, date: new Date().toLocaleString(), img: item.img});
-    saveData(); renderMapMarkers(); closeModal(); renderAllViews();
-    alert("✅ Compra exitosa. Ubicación revelada.");
+    if(activeUser.balance < item.price) return alert("Saldo insuficiente");
+    
+    // Transferencia de fondos
+    activeUser.balance -= item.price;
+    const owner = users[item.ownerId];
+    if(owner) owner.balance += item.price;
+
+    item.buyers.push(activeUser.id);
+    
+    if(item.licenseType === 'exclusive') {
+        item.status = 'sold';
+    }
+
+    saveData();
+    renderMapMarkers();
+    closeModal();
+    renderAllViews();
+    alert("✅ Compra realizada. Mapa actualizado.");
 }
 
 // ============ SUBIR NOTICIA ============
 document.getElementById('uploadForm').addEventListener('submit', (e) => {
     e.preventDefault();
+    if(activeUser.id !== 'witness') return alert("Solo el Testigo puede subir noticias en esta demo.");
+
     const btn = document.getElementById('btnUpload');
     const originalText = btn.textContent;
-    btn.textContent = "🛰️ Verificando satélites...";
+    btn.textContent = "🛰️ Verificando...";
     btn.disabled = true;
 
     setTimeout(() => {
@@ -431,50 +521,56 @@ document.getElementById('uploadForm').addEventListener('submit', (e) => {
         const lic = document.getElementById('licInput').value;
         
         const newItem = {
-            id: Date.now(), title: title, price: price,
-            lat: -34.6037 + (Math.random()-0.5)*0.05, lng: -58.3816 + (Math.random()-0.5)*0.05,
+            id: Date.now(),
+            ownerId: activeUser.id, // ASIGNAR DUEÑO
+            title: title,
+            price: price,
+            lat: -34.6037 + (Math.random()-0.5)*0.05,
+            lng: -58.3816 + (Math.random()-0.5)*0.05,
             img: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800',
-            licenseType: lic, status: 'for_sale', hashtags: tags, importance: 'high', trustScore: 95
+            licenseType: lic,
+            status: 'for_sale',
+            hashtags: tags,
+            importance: 'high',
+            trustScore: 95,
+            buyers: []
         };
         
         feed.unshift(newItem);
         saveData(); renderMapMarkers(); renderAllViews();
-        e.target.reset();
-        document.querySelectorAll('.license-option').forEach(o => o.classList.remove('selected'));
-        document.getElementById('opt-nonexclusive').classList.add('selected');
-        document.getElementById('licInput').value = 'nonexclusive';
-        closeModal(); showView('home');
-        btn.textContent = originalText;
-        btn.disabled = false;
-        alert("✅ Noticia subida y verificada exitosamente.");
-    }, 1500);
+        e.target.reset(); closeModal(); showView('home');
+        btn.textContent = originalText; btn.disabled = false;
+        alert("✅ Noticia subida.");
+    }, 1000);
 });
 
-// ============ NEGOCIACIÓN & TIMER ============
+// ============ NEGOCIACIÓN ============
 function makeOffer(itemId, amount) {
     const expiresAt = Date.now() + (15 * 60 * 1000);
-    negotiations.push({ id: Date.now(), newsId: itemId, amount, status: 'pending', expiresAt });
+    negotiations.push({ id: Date.now(), newsId: itemId, buyerId: activeUser.id, amount, status: 'pending', expiresAt });
     feed.find(x => x.id === itemId).status = 'negotiating';
-    saveData(); document.getElementById('navNotif').classList.add('active'); closeModal(); renderAllViews();
+    saveData(); closeModal(); renderAllViews();
+    alert("Oferta enviada al dueño.");
 }
 function sendManualOffer(id) { const val = Number(document.getElementById('cOffer').value); if(val>0) makeOffer(id, val); }
 
 function showSellerPanel(negId) {
+    // Solo el dueño puede ver esto
     const neg = negotiations.find(n => n.id === negId);
+    if(activeUser.id !== 'witness') return alert("Solo el vendedor puede aceptar.");
+
     const item = feed.find(f => f.id === neg.newsId);
-    document.getElementById('modalTitle').textContent = 'Oferta';
+    document.getElementById('modalTitle').textContent = 'Oferta Entrante';
     document.getElementById('modalBody').innerHTML = `
         <div class="timer-box"><small>EXPIRA EN</small><div id="countdown" class="timer-countdown">15:00</div></div>
         <div style="text-align:center; padding:20px; background:var(--bg); border-radius:15px; margin-bottom:15px">
             <h1 style="color:var(--gold); font-size:42px">$${neg.amount}</h1><p>${item.title}</p>
         </div>
-        <button class="btn btn-primary" onclick="acceptOffer(${negId})">ACEPTAR</button>
-        <div style="margin-top:15px"><input type="number" class="form-input" placeholder="Contraoferta..."><button class="btn btn-secondary" onclick="alert('Enviada')">Contraofertar</button></div>`;
+        <button class="btn btn-primary" onclick="acceptOffer(${negId})">ACEPTAR OFERTA</button>`;
     document.getElementById('modal').classList.add('active');
     
-    // FIX 1: TIMER DINÁMICO
     if(activeInterval) clearInterval(activeInterval);
-    updateTimerDisplay(neg.expiresAt); // Run once immediately
+    updateTimerDisplay(neg.expiresAt);
     activeInterval = setInterval(() => updateTimerDisplay(neg.expiresAt), 1000);
 }
 
@@ -482,11 +578,7 @@ function updateTimerDisplay(expiresAt) {
     const diff = expiresAt - Date.now();
     const el = document.getElementById('countdown');
     if(!el) return;
-    if(diff <= 0) {
-        el.textContent = "00:00";
-        clearInterval(activeInterval);
-        return;
-    }
+    if(diff <= 0) { el.textContent = "00:00"; clearInterval(activeInterval); return; }
     const mins = Math.floor(diff/60000);
     const secs = Math.floor((diff%60000)/1000);
     el.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -495,73 +587,75 @@ function updateTimerDisplay(expiresAt) {
 function acceptOffer(id) {
     const neg = negotiations.find(n => n.id === id);
     const item = feed.find(f => f.id === neg.newsId);
-    cashSound.play().catch(()=>{});
     
     item.status = 'sold'; 
     neg.status = 'accepted';
-    currentUser.balance += neg.amount;
-    salesHistory.unshift({title: item.title, amount: neg.amount, date: new Date().toLocaleString(), img: item.img});
+    item.buyers.push(neg.buyerId); // Agregar comprador a la lista
     
-    saveData(); 
-    closeModal(); 
-    renderMapMarkers(); // Update map immediately
-    renderAllViews();
+    // Transferir dinero
+    const buyer = users[neg.buyerId];
+    buyer.balance -= neg.amount;
+    activeUser.balance += neg.amount;
+
+    saveData(); closeModal(); renderAllViews(); alert("Oferta Aceptada.");
 }
 
-// ============ CONTROL VISTAS ============
+// ============ VISTAS Y LISTAS ============
 function showView(name) {
     document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
     document.getElementById(`view-${name}`).style.display = 'block';
     
     if(name === 'home') setTimeout(() => { if(!map) initMap(); else { map.invalidateSize(); renderMapMarkers(); } }, 100);
-    if(name === 'sales') { renderSales(); if(!earningsChart) initChart(); }
-    if(name === 'discover') { renderGrid('discoverGrid', feed); renderTrends(); }
-    if(name === 'upload') document.getElementById('sugTags').textContent = trendTags.slice(0,3).join(", ");
-    if(name === 'accounts') renderSubs();
-    if(name === 'wallet') updateWalletUI();
+    if(name === 'sales') renderSales();
+    if(name === 'discover') renderGrid('discoverGrid', feed);
     
     const mapNav = {'home':0, 'discover':1, 'upload':2, 'sales':3, 'wallet':4};
     if(mapNav[name] !== undefined) document.querySelectorAll('.nav-item')[mapNav[name]].classList.add('active');
 }
 
-function updateWalletUI() { document.getElementById('walletBalance').textContent = `$${currentUser.balance}`; }
-
-// CHART & LISTS
-function initChart() {
-    const ctx = document.getElementById('earningsChart').getContext('2d');
-    earningsChart = new Chart(ctx, {
-        type: 'bar',
-        data: { labels: ['Lun','Mar','Mie','Jue','Vie','Sab','Dom'], datasets: [{ data: [50,90,45,130,110,200,75], backgroundColor: '#ff3b30', borderRadius:4 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display:false} }, scales: { y:{display:false}, x:{grid:{display:false}} } }
-    });
-}
-function updateChart(p, btn) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
-    if(p==='month') { earningsChart.data.labels = ['Sem 1','Sem 2','Sem 3','Sem 4']; earningsChart.data.datasets[0].data = [450, 800, 600, 1000]; }
-    else if(p==='year') { earningsChart.data.labels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; earningsChart.data.datasets[0].data = [1200,1500,1100,1700,1900,2400,2000,2100,2300,2700,2500,3400]; }
-    else { earningsChart.data.labels = ['Lun','Mar','Mie','Jue','Vie','Sab','Dom']; earningsChart.data.datasets[0].data = [50,90,45,130,110,200,75]; }
-    earningsChart.update();
-}
-
 function renderSales() {
-    const pending = negotiations.filter(n => n.status === 'pending');
-    document.getElementById('pendingOffersCard').style.display = pending.length ? 'block' : 'none';
-    document.getElementById('offersList').innerHTML = pending.map(n => `<div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px; border-radius:10px; margin-bottom:8px"><div><strong>$${n.amount}</strong><br><small>Pendiente</small></div><button class="btn btn-primary" style="width:auto; padding:8px 15px" onclick="showSellerPanel(${n.id})">Ver</button></div>`).join('');
-    document.getElementById('salesList').innerHTML = salesHistory.map(s => `<div class="list-item"><img src="${s.img}" class="list-item-image"><div class="list-item-content"><div class="list-item-title">${s.title}</div><small>${s.date}</small></div><strong style="color:var(--success)">+$${s.amount}</strong></div>`).join('');
-    document.getElementById('purchasesList').innerHTML = purchases.map(p => `<div class="list-item"><img src="${p.img}" class="list-item-image"><div class="list-item-content"><div class="list-item-title">${p.title}</div><small>${p.date}</small></div><strong style="color:var(--accent)">-$${p.price}</strong></div>`).join('');
+    // LOGICA INTELIGENTE DE VENTAS:
+    // Si soy Testigo: Veo ofertas entrantes y mis ventas.
+    // Si soy Medio: Veo mis compras y ofertas enviadas.
+    
+    const salesListEl = document.getElementById('salesList');
+    const purchasesListEl = document.getElementById('purchasesList');
+    const offersEl = document.getElementById('offersList');
+    const pendingCard = document.getElementById('pendingOffersCard');
+
+    if(activeUser.id === 'witness') {
+        // VISTA VENDEDOR
+        const pending = negotiations.filter(n => n.status === 'pending');
+        pendingCard.style.display = pending.length ? 'block' : 'none';
+        offersEl.innerHTML = pending.map(n => `<div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px; border-radius:10px; margin-bottom:8px"><div><strong>$${n.amount}</strong><br><small>Recibida</small></div><button class="btn btn-primary" style="width:auto; padding:8px 15px" onclick="showSellerPanel(${n.id})">Gestionar</button></div>`).join('');
+        
+        // Mis Ventas (Items mios que alguien compró)
+        const mySoldItems = feed.filter(f => f.ownerId === activeUser.id && f.buyers.length > 0);
+        salesListEl.innerHTML = mySoldItems.map(s => `<div class="list-item"><img src="${s.img}" class="list-item-image"><div class="list-item-content"><div class="list-item-title">${s.title}</div><small>Vendido</small></div><strong style="color:var(--success)">+$${s.price}</strong></div>`).join('');
+        purchasesListEl.innerHTML = '<div style="padding:10px; color:var(--muted)">No compras noticias, las vendes.</div>';
+    
+    } else {
+        // VISTA COMPRADOR
+        pendingCard.style.display = 'none';
+        
+        // Mis Compras (Items donde estoy en la lista de buyers)
+        const myPurchases = feed.filter(f => f.buyers.includes(activeUser.id));
+        purchasesListEl.innerHTML = myPurchases.map(p => `<div class="list-item"><img src="${p.img}" class="list-item-image"><div class="list-item-content"><div class="list-item-title">${p.title}</div><small>Comprado</small></div><strong style="color:var(--accent)">-$${p.price}</strong></div>`).join('');
+        salesListEl.innerHTML = '<div style="padding:10px; color:var(--muted)">Eres prensa, no vendes noticias.</div>';
+    }
 }
 
-function renderTrends() { document.getElementById('trendingTags').innerHTML = trendTags.map(t => `<span style="display:inline-block; background:rgba(255,59,48,0.1); padding:6px 15px; border-radius:20px; color:var(--accent); margin-right:10px; cursor:pointer" onclick="document.getElementById('searchInput').value='${t}'; showView('discover')">${t}</span>`).join(''); }
-function renderSubs() { document.getElementById('subaccountsList').innerHTML = subaccounts.map(s => `<div class="list-item"><img src="${s.img}" class="list-item-image" style="border-radius:50%; width:50px; height:50px"><div class="list-item-content"><div>${s.name}</div><small>${s.files} archivos</small></div></div>`).join(''); }
+// Chart, Trends, Aux
+let earningsChart = null;
+function initChart() { /* ...chart setup... */ }
+function updateChart(p, btn) { /* ...chart update... */ }
+function renderTrends() { document.getElementById('trendingTags').innerHTML = ["#accidente", "#politica"].map(t => `<span style="display:inline-block; background:rgba(255,59,48,0.1); padding:6px 15px; border-radius:20px; color:var(--accent); margin-right:10px;">${t}</span>`).join(''); }
 function selectLic(el, type) { document.querySelectorAll('.license-option').forEach(o => o.classList.remove('selected')); el.classList.add('selected'); document.getElementById('licInput').value = type; }
 function closeModal() { document.getElementById('modal').classList.remove('active'); clearInterval(activeInterval); }
-function logout() { if(confirm('¿Salir?')) location.reload(); }
 
 // INIT
 document.getElementById('themeToggle').onclick = () => document.body.classList.toggle('light');
-document.getElementById('searchInput').oninput = (e) => { const v = e.target.value.toLowerCase(); renderGrid('discoverGrid', feed.filter(i => i.title.toLowerCase().includes(v) || i.hashtags.toLowerCase().includes(v))); };
-window.onload = () => { if(feed.length===0){feed=defaultFeed;saveData();} showView('home'); renderGrid('homeGrid', feed); };
 </script>
 </body>
 </html>
