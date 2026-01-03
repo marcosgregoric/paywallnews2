@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Paywall News - Versión 5.1 Final</title>
+<title>Paywall News - Versión 5.2 (UX & Legal)</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -13,7 +13,7 @@
   --accent: #ff3b30; --accent-hover: #ff5449; --border: rgba(255,255,255,0.06);
   --shadow: rgba(0,0,0,0.3); --overlay: rgba(0,0,0,0.7); --watermark: rgba(255,255,255,0.08);
   --success: #34c759; --warning: #ffcc00; --info: #0a84ff; --gold: #ffd700;
-  --mp-blue: #009EE3; /* MercadoPago Blue */
+  --mp-blue: #009EE3;
 }
 body.light {
   --bg: #f8f9fa; --bg-secondary: #ffffff; --card: #ffffff;
@@ -32,22 +32,34 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 .notif-container { position: relative; }
 .notif-btn { position: relative; background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; }
 .notif-dot { position: absolute; top: 0; right: 0; width: 10px; height: 10px; background: var(--accent); border-radius: 50%; border: 2px solid var(--bg-secondary); display: none; }
-.notif-dropdown { position: absolute; top: 50px; right: -10px; width: 300px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden; z-index: 2000; }
+.notif-dropdown { position: absolute; top: 50px; right: -10px; width: 320px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden; z-index: 2000; }
 .notif-dropdown.active { display: flex; }
 .notif-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 14px; background: var(--bg-secondary); }
 .notif-list { max-height: 300px; overflow-y: auto; }
-.notif-item { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: start; transition: 0.2s; font-size: 13px; }
+.notif-item { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: start; transition: 0.2s; font-size: 13px; cursor: pointer; }
 .notif-item:hover { background: var(--bg); }
 .notif-icon { font-size: 16px; margin-top: 2px; }
 .notif-time { font-size: 11px; color: var(--text-secondary); margin-top: 4px; display: block; }
 
-/* MAPA */
+/* MAPA Y PINES */
 .map-container { height: 360px; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px var(--shadow); margin-bottom: 24px; position: relative; border: 1px solid var(--border); z-index: 1; }
 #map { height: 100%; width: 100%; }
 .gps-btn { position: absolute; bottom: 20px; right: 20px; z-index: 1000; background: var(--card); color: var(--text); border: none; padding: 12px; border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; font-size: 20px; transition: transform 0.2s; }
 .gps-btn:hover { transform: scale(1.1); }
 .map-legend { position: absolute; left: 16px; bottom: 16px; background: var(--overlay); backdrop-filter: blur(10px); padding: 10px 15px; border-radius: 12px; font-size: 12px; z-index: 1000; color: white; display: flex; gap: 15px; }
 .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+
+/* ESTILO PIN VERTICAL */
+.map-pin {
+    width: 24px; height: 24px;
+    border-radius: 50% 50% 50% 0;
+    border: 2px solid white;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+    transform: rotate(-45deg); /* Esto hace que la punta quede abajo a la izquierda, ajustamos con el icono */
+    /* Para que sea vertical perfecto usamos rotate(-135deg) pero depende del anchor de leaflet. 
+       Ajuste final: Lo hacemos rotar para que apunte abajo */
+    transform: rotate(-135deg);
+}
 
 /* LOGIN SCREEN */
 #login-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
@@ -95,7 +107,7 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 .form-input { width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 15px; margin-bottom: 10px; }
 .license-option { padding: 16px; border-radius: 12px; border: 2px solid var(--border); cursor: pointer; margin-bottom: 10px; transition: 0.2s; position: relative; }
 .license-option.selected { border-color: var(--accent); background: rgba(255, 59, 48, 0.05); }
-.info-btn { position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--text-secondary); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; }
+.info-btn { position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--text-secondary); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; z-index: 2; }
 .legal-text { display: none; margin-top: 10px; font-size: 12px; color: var(--text-secondary); padding-top: 10px; border-top: 1px solid var(--border); line-height: 1.4; }
 
 .btn { padding: 14px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; border: none; width: 100%; transition: 0.2s; }
@@ -104,12 +116,10 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 .btn-secondary { background: var(--border); color: var(--text); }
 .btn-danger { background: rgba(255, 59, 48, 0.1); color: #ff3b30; border: 1px solid #ff3b30; }
 .icon-btn { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: transparent; border: none; font-size: 20px; }
-
-/* MERCADOPAGO STYLES */
 .btn-mp { background: var(--mp-blue); color: white; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .btn-mp:hover { filter: brightness(1.1); }
 
-/* LOADING OVERLAY */
+/* LOADING */
 .mp-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 6000; display: none; flex-direction: column; align-items: center; justify-content: center; color: #333; }
 .mp-overlay.dark-mode { background: rgba(0,0,0,0.9); color: white; }
 .spinner { width: 50px; height: 50px; border: 5px solid rgba(0, 158, 227, 0.2); border-top-color: var(--mp-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
@@ -169,16 +179,11 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 </header>
 
 <div class="container">
-  
   <div id="view-home" class="view active">
     <div class="map-container">
       <div id="map"></div>
       <button class="gps-btn" onclick="locateUser()">🎯</button>
-      <div class="map-legend">
-        <div><span class="legend-dot" style="background: #ff3b30;"></span> Alta</div>
-        <div><span class="legend-dot" style="background: #ffcc00;"></span> Media</div>
-        <div><span class="legend-dot" style="background: #4cd964;"></span> Baja</div>
-      </div>
+      <div class="map-legend"><div><span class="legend-dot" style="background: #ff3b30;"></span> Alta</div><div><span class="legend-dot" style="background: #ffcc00;"></span> Media</div><div><span class="legend-dot" style="background: #4cd964;"></span> Baja</div></div>
     </div>
     <div class="section-header"><div class="section-title">Últimas noticias</div></div>
     <div class="news-grid" id="homeGrid"></div>
@@ -207,12 +212,18 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
                 <div class="license-option selected" id="opt-nonexclusive" onclick="selectLic(this, 'nonexclusive')">
                     <strong>🌐 No Exclusiva</strong><br><small>Venta múltiple permitida.</small>
                     <div class="info-btn" onclick="toggleLegal(event, 'legal-non')">?</div>
-                    <div id="legal-non" class="legal-text">Permite a múltiples medios utilizar el contenido. El autor retiene la propiedad.</div>
+                    <div id="legal-non" class="legal-text">
+                        <strong>Derechos:</strong> Uso editorial en múltiples plataformas. El autor conserva la propiedad.<br><br>
+                        <span style="color:var(--accent)">⚠️ ADVERTENCIA:</span> Si otro comprador adquiere posteriormente la <strong>Licencia Exclusiva</strong>, esta licencia quedará <strong>REVOCADA</strong> y deberás cesar el uso del contenido inmediatamente.
+                    </div>
                 </div>
                 <div class="license-option" id="opt-exclusive" onclick="selectLic(this, 'exclusive')">
                     <strong>🏆 Exclusiva</strong><br><small>Un solo comprador. Mayor precio.</small>
                     <div class="info-btn" onclick="toggleLegal(event, 'legal-ex')">?</div>
-                    <div id="legal-ex" class="legal-text">Transfiere los derechos exclusivos. Se retira del mercado tras la venta.</div>
+                    <div id="legal-ex" class="legal-text">
+                        <strong>Derechos:</strong> Propiedad total transferida. El contenido se retira del mercado.<br>
+                        <strong>Efecto:</strong> Anula cualquier licencia no exclusiva vendida previamente sobre este contenido.
+                    </div>
                 </div>
                 <input type="hidden" id="licInput" value="nonexclusive">
             </div>
@@ -250,13 +261,9 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
         <div style="font-size:48px; margin-bottom:10px">💰</div>
         <div style="color:var(--text-secondary)">Saldo disponible</div>
         <div id="walletBalance" style="font-size:42px; font-weight:800; margin:10px 0"></div>
-        <div id="mpConnectState">
-             </div>
+        <div id="mpConnectState"></div>
     </div>
-    <div class="list-card">
-        <h3>Historial</h3>
-        <div class="list-item"><div class="list-item-content"><div>Registro</div><small>Cuenta nueva</small></div><strong>$0</strong></div>
-    </div>
+    <div class="list-card"><h3>Historial</h3><div class="list-item"><div class="list-item-content"><div>Registro</div><small>Cuenta nueva</small></div><strong>$0</strong></div></div>
   </div>
 
   <div id="view-profile" class="view">
@@ -307,12 +314,11 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// ============ DATOS INICIALES CON GAMIFICATION ============
+// ============ DATOS INICIALES ============
 const usersDB = {
     'witness': { id: 'witness', name: 'Matías (Vendedor)', role: 'Fuente Directa', balance: 150, avatar: '📱', mpLinked: false, trustScore: 80, notifications: [] },
     'media': { id: 'media', name: 'InfoGlobal (Medio)', role: 'Prensa', balance: 5000, avatar: '📺', mpLinked: true, trustScore: 100, notifications: [] }
 };
-
 const defaultFeed = [
   {id:1, ownerId:'witness', title:'Choque en Av. Mitre', price:50, lat:-34.6037, lng:-58.3816, img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#accidente #transito', importance:'high', trustScore: 98, buyers:[], views: 45},
   {id:2, ownerId:'witness', title:'Incendio en Fábrica', price:150, lat:-34.6070, lng:-58.3772, img:'https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#urgente #quilmes', importance:'medium', trustScore: 85, buyers:[], views: 120},
@@ -321,54 +327,34 @@ const defaultFeed = [
   {id:5, ownerId:'other', title:'Derrumbe en Obra', price:120, lat:-34.6100, lng:-58.4000, img:'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#policiales', importance:'medium', trustScore: 88, buyers:[], views: 60}
 ];
 let subaccounts = [{name: 'Cámara Frontal', files: 12, img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'}, {name: 'Dron Aéreo', files: 7, img: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100'}];
-
 let feed = JSON.parse(localStorage.getItem('pw_feed')) || defaultFeed;
 let users = JSON.parse(localStorage.getItem('pw_users')) || usersDB;
 let negotiations = JSON.parse(localStorage.getItem('pw_negs')) || [];
 let activeUser = null; 
 
-// INIT
+// LOGIN
 function loginAs(userId) { activeUser = users[userId]; localStorage.setItem('pw_active_id', userId); document.getElementById('login-screen').style.display = 'none'; initApp(); }
 function logout() { localStorage.removeItem('pw_active_id'); location.reload(); }
 function initApp() { updateProfileUI(); updateWalletUI(); renderNotifications(); showView('home'); renderGrid('homeGrid', feed); startSimulation(); }
 const storedId = localStorage.getItem('pw_active_id'); if (storedId && users[storedId]) { activeUser = users[storedId]; document.getElementById('login-screen').style.display = 'none'; initApp(); }
-
 function saveData() { localStorage.setItem('pw_feed', JSON.stringify(feed)); localStorage.setItem('pw_users', JSON.stringify(users)); localStorage.setItem('pw_negs', JSON.stringify(negotiations)); updateWalletUI(); renderNotifications(); }
 function resetData() { localStorage.clear(); location.reload(); }
-
-function updateProfileUI() { 
-    document.getElementById('userNameDisplay').textContent = activeUser.name; 
-    document.getElementById('userRoleDisplay').textContent = activeUser.role; 
-    document.getElementById('userAvatar').textContent = activeUser.avatar; 
-    document.getElementById('userTrustDisplay').textContent = `🛡️ Trust: ${activeUser.trustScore || 80}`;
-}
+function updateProfileUI() { document.getElementById('userNameDisplay').textContent = activeUser.name; document.getElementById('userRoleDisplay').textContent = activeUser.role; document.getElementById('userAvatar').textContent = activeUser.avatar; document.getElementById('userTrustDisplay').textContent = `🛡️ Trust: ${activeUser.trustScore || 80}`; }
 function updateWalletUI() { 
     document.getElementById('walletBalance').textContent = `$${activeUser.balance}`;
     const mpContainer = document.getElementById('mpConnectState');
-    if(activeUser.mpLinked) {
-        mpContainer.innerHTML = `<button class="btn btn-mp" onclick="withdrawMP()">Retirar a Mercado Pago</button><div style="text-align:center; margin-top:10px; font-size:12px; color:var(--success)">✅ Cuenta Vinculada</div>`;
-    } else {
-        mpContainer.innerHTML = `<button class="btn btn-secondary" onclick="linkMP()">🔗 Vincular Mercado Pago</button>`;
-    }
+    if(activeUser.mpLinked) { mpContainer.innerHTML = `<button class="btn btn-mp" onclick="withdrawMP()">Retirar a Mercado Pago</button><div style="text-align:center; margin-top:10px; font-size:12px; color:var(--success)">✅ Cuenta Vinculada</div>`; } 
+    else { mpContainer.innerHTML = `<button class="btn btn-secondary" onclick="linkMP()">🔗 Vincular Mercado Pago</button>`; }
 }
-
-// SIMULACION MP
-function linkMP() {
-    const alias = prompt("Ingresa tu Alias o CVU de MercadoPago:");
-    if(alias) { activeUser.mpLinked = true; saveData(); alert("✅ Cuenta vinculada exitosamente."); }
-}
-function withdrawMP() {
-    if(activeUser.balance <= 0) return alert("Sin fondos disponibles.");
-    document.getElementById('mpOverlay').style.display = 'flex';
-    setTimeout(() => { document.getElementById('mpOverlay').style.display = 'none'; activeUser.balance = 0; saveData(); alert("💸 Fondos enviados a tu cuenta MercadoPago."); }, 2000);
-}
+function linkMP() { const alias = prompt("Ingresa tu Alias o CVU de MercadoPago:"); if(alias) { activeUser.mpLinked = true; saveData(); alert("✅ Cuenta vinculada exitosamente."); } }
+function withdrawMP() { if(activeUser.balance <= 0) return alert("Sin fondos disponibles."); document.getElementById('mpOverlay').style.display = 'flex'; setTimeout(() => { document.getElementById('mpOverlay').style.display = 'none'; activeUser.balance = 0; saveData(); alert("💸 Fondos enviados a tu cuenta MercadoPago."); }, 2000); }
 function showProcessing() { return new Promise(r => { document.getElementById('mpOverlay').style.display = 'flex'; setTimeout(() => { document.getElementById('mpOverlay').style.display = 'none'; r(); }, 2000); }); }
 
-// NOTIFICACIONES & SIMULADOR
+// NOTIFICACIONES INTELIGENTES
 function toggleNotif() { const list = document.getElementById('notifDropdown'); list.classList.toggle('active'); document.getElementById('notifDot').style.display = 'none'; }
-function addNotification(userId, text, icon='🔔') {
+function addNotification(userId, text, icon='🔔', action='sales') {
     if(!users[userId].notifications) users[userId].notifications = [];
-    users[userId].notifications.unshift({text, icon, time: new Date().toLocaleTimeString()});
+    users[userId].notifications.unshift({text, icon, action, time: new Date().toLocaleTimeString()});
     if(users[userId].notifications.length > 20) users[userId].notifications.pop();
     saveData();
 }
@@ -376,8 +362,12 @@ function renderNotifications() {
     const list = document.getElementById('notifList');
     const notifs = activeUser.notifications || [];
     if(notifs.length === 0) { list.innerHTML = '<div style="padding:15px;color:var(--text-secondary);text-align:center">Sin novedades</div>'; return; }
-    list.innerHTML = notifs.map(n => `<div class="notif-item"><div class="notif-icon">${n.icon}</div><div><div>${n.text}</div><span class="notif-time">${n.time}</span></div></div>`).join('');
+    list.innerHTML = notifs.map(n => `<div class="notif-item" onclick="handleNotifClick('${n.action}')"><div class="notif-icon">${n.icon}</div><div><div>${n.text}</div><span class="notif-time">${n.time}</span></div></div>`).join('');
     if(notifs.length > 0) document.getElementById('notifDot').style.display = 'block';
+}
+function handleNotifClick(action) {
+    toggleNotif();
+    if(action) showView(action);
 }
 function startSimulation() {
     setInterval(() => {
@@ -385,13 +375,13 @@ function startSimulation() {
         if(myItems.length > 0) {
             const item = myItems[Math.floor(Math.random() * myItems.length)];
             item.views = (item.views || 0) + Math.floor(Math.random() * 5);
-            if(item.views > 50 && item.views < 55) { if(activeUser.id === 'witness') addNotification('witness', `🔥 Tu noticia "${item.title}" está siendo muy vista.`, '📈'); }
+            if(item.views > 50 && item.views < 55) { if(activeUser.id === 'witness') addNotification('witness', `🔥 Tu noticia "${item.title}" está siendo muy vista.`, '📈', 'sales'); }
             if(document.getElementById('view-home').style.display === 'block') renderGrid('homeGrid', feed);
         }
     }, 3000);
 }
 
-// MAPA
+// MAPA VERTICAL
 let map = null; let markersLayer = L.layerGroup(); let userMarker = null;
 function initMap() { if (map) return; map = L.map('map', {zoomControl: false}).setView([-34.6037, -58.3816], 13); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); markersLayer.addTo(map); renderMapMarkers(); }
 function getObfuscatedCoords(lat, lng) { return [lat + (Math.random() - 0.5) * 0.003, lng + (Math.random() - 0.5) * 0.003]; }
@@ -402,7 +392,8 @@ function renderMapMarkers() {
         const canSeeExact = isOwner || iBoughtIt || (item.status === 'sold' && iBoughtIt);
         const displayCoords = canSeeExact ? [item.lat, item.lng] : getObfuscatedCoords(item.lat, item.lng);
         const color = item.importance === 'high' ? '#ff3b30' : (item.importance === 'medium' ? '#ffcc00' : '#4cd964');
-        const marker = L.marker(displayCoords, {icon: L.divIcon({ className: '', html: `<div style="width:24px;height:24px;background:${color};border-radius:50% 50% 50% 0;transform:rotate(45deg);border:2px solid white;box-shadow:0 3px 8px rgba(0,0,0,0.3);"></div>`, iconSize: [24,24] })}).addTo(markersLayer);
+        const markerHtml = `<div class="map-pin" style="background:${color}"></div>`;
+        const marker = L.marker(displayCoords, {icon: L.divIcon({ className: '', html: markerHtml, iconSize: [24,24], iconAnchor: [12, 30] })}).addTo(markersLayer);
         marker.on('click', () => openDetail(item.id));
         if (!canSeeExact) L.circle(displayCoords, {color: color, fillColor: color, fillOpacity: 0.1, radius: 400, weight: 1, dashArray: '5, 5'}).addTo(markersLayer);
     });
@@ -412,7 +403,6 @@ function locateUser() { navigator.geolocation.getCurrentPosition(pos => { const 
 // UI RENDER
 function generateWatermark() { let c=''; for(let i=0;i<9;i++) c+=`<div class="watermark-cell"><span class="wm-brand">Paywall News</span><span class="wm-user">Propiedad Protegida</span></div>`; return `<div class="watermark-overlay">${c}</div>`; }
 function getTrustBadge(score) { return score > 90 ? `<div class="trust-badge">🛡️ GPS VERIFICADO</div>` : ''; }
-
 function renderGrid(id, items) {
   const container = document.getElementById(id); if(!container) return;
   if(items.length===0) { container.innerHTML='<div style="padding:20px;color:var(--text-secondary)">Nada por aquí.</div>'; return; }
@@ -422,16 +412,12 @@ function renderGrid(id, items) {
     if(item.status==='sold' && item.licenseType==='exclusive') { statusLabel='● Vendido'; statusColor='var(--muted)'; }
     if(item.buyers.includes(activeUser.id)) { statusLabel='✅ Adquirida'; statusColor='var(--info)'; }
     const showWm = (item.ownerId !== activeUser.id) && !item.buyers.includes(activeUser.id);
-    return `<div class="news-card ${mineClass}" onclick="openDetail(${item.id})">
-      <div class="news-card-image"><img src="${item.img}">${showWm?generateWatermark():''}<div class="price-badge">$${item.price}</div><div class="view-counter">👁️ ${item.views||0}</div><div class="license-badge ${item.licenseType==='exclusive'?'lic-exclusive':'lic-nonexclusive'}">${item.licenseType==='exclusive'?'🏆':'🌐'}</div></div>
-      <div style="padding:15px"><div class="list-item-title">${item.title}</div>${getTrustBadge(item.trustScore||0)}<div style="font-size:12px;color:var(--info);margin:5px 0">${item.hashtags}</div><small style="color:${statusColor}">${statusLabel}</small></div>
-    </div>`;
+    return `<div class="news-card ${mineClass}" onclick="openDetail(${item.id})"><div class="news-card-image"><img src="${item.img}">${showWm?generateWatermark():''}<div class="price-badge">$${item.price}</div><div class="view-counter">👁️ ${item.views||0}</div><div class="license-badge ${item.licenseType==='exclusive'?'lic-exclusive':'lic-nonexclusive'}">${item.licenseType==='exclusive'?'🏆':'🌐'}</div></div><div style="padding:15px"><div class="list-item-title">${item.title}</div>${getTrustBadge(item.trustScore||0)}<div style="font-size:12px;color:var(--info);margin:5px 0">${item.hashtags}</div><small style="color:${statusColor}">${statusLabel}</small></div></div>`;
   }).join('');
 }
 
 // DETALLES Y NEGOCIACION
 let activeInterval = null;
-
 function openDetail(id) {
   const item = feed.find(x => x.id === id);
   const myNeg = negotiations.find(n => n.newsId === id && n.buyerId === activeUser.id && n.status !== 'rejected');
@@ -439,38 +425,24 @@ function openDetail(id) {
   const isOwner = item.ownerId === activeUser.id;
   const iBoughtIt = item.buyers.includes(activeUser.id);
   const showWm = !isOwner && !iBoughtIt;
-
   let ui = `<div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:15px"><img src="${item.img}" style="width:100%">${showWm?generateWatermark():''}</div>${getTrustBadge(item.trustScore||0)}<p style="margin:10px 0;color:var(--text-secondary)">${item.hashtags}</p>`;
-
-  if (isOwner) {
-      ui += `<div class="list-card" style="text-align:center;background:rgba(10,132,255,0.1);border-color:var(--info)"><h3>📝 Tu Noticia</h3><p>Gestiona ofertas en la pestaña "Ventas".</p></div>`;
-  } else if (iBoughtIt) {
-      ui += `<div class="list-card" style="text-align:center;background:rgba(52,199,89,0.1);border-color:var(--success)"><h3 style="color:var(--success)">✅ Contenido Desbloqueado</h3></div>`;
-  } else {
+  if (isOwner) { ui += `<div class="list-card" style="text-align:center;background:rgba(10,132,255,0.1);border-color:var(--info)"><h3>📝 Tu Noticia</h3><p>Gestiona ofertas en la pestaña "Ventas".</p></div>`; } 
+  else if (iBoughtIt) { ui += `<div class="list-card" style="text-align:center;background:rgba(52,199,89,0.1);border-color:var(--success)"><h3 style="color:var(--success)">✅ Contenido Desbloqueado</h3></div>`; } 
+  else {
       if (myNeg) {
-          if (myNeg.status === 'pending') {
-             ui += `<div class="list-card" style="text-align:center;border-color:var(--warning)"><h3 style="color:var(--warning)">⏳ Oferta Enviada: $${myNeg.amount}</h3><p>Esperando respuesta del vendedor...</p></div>`;
-          } else if (myNeg.status === 'counter_pending') {
-             ui += `<div class="list-card" style="text-align:center;border-color:var(--gold);background:rgba(255,215,0,0.05)">
-                <h3 style="color:var(--gold)">🔄 Contraoferta: $${myNeg.amount}</h3><div style="display:flex;gap:10px;justify-content:center;margin-top:10px"><button class="btn btn-primary" onclick="acceptCounter(${myNeg.id})">ACEPTAR</button><button class="btn btn-danger" onclick="rejectCounter(${myNeg.id})">RECHAZAR</button></div></div>`;
-          }
+          if (myNeg.status === 'pending') { ui += `<div class="list-card" style="text-align:center;border-color:var(--warning)"><h3 style="color:var(--warning)">⏳ Oferta Enviada: $${myNeg.amount}</h3><p>Esperando respuesta del vendedor...</p></div>`; } 
+          else if (myNeg.status === 'counter_pending') { ui += `<div class="list-card" style="text-align:center;border-color:var(--gold);background:rgba(255,215,0,0.05)"><h3 style="color:var(--gold)">🔄 Contraoferta: $${myNeg.amount}</h3><div style="display:flex;gap:10px;justify-content:center;margin-top:10px"><button class="btn btn-primary" onclick="acceptCounter(${myNeg.id})">ACEPTAR</button><button class="btn btn-danger" onclick="rejectCounter(${myNeg.id})">RECHAZAR</button></div></div>`; }
       } else {
-          if(item.status === 'negotiating' && !myNeg) {
-              ui += `<div class="list-card" style="text-align:center"><p>⚠️ Esta noticia está siendo negociada por otro medio.</p></div>`;
-          } else if(item.licenseType === 'exclusive') {
-            ui += `<button class="btn btn-mp" style="width:100%" onclick="buyDirect(${item.id})">Comprar Exclusivo $${item.price}</button>`;
-          } else {
-            ui += `<button class="btn btn-mp" style="width:100%; margin-bottom:15px" onclick="buyDirect(${item.id})">Comprar Licencia Compartida $${item.price}</button>
-                   <div class="offer-section"><h4 style="text-align:center;color:var(--gold);margin-bottom:10px">💎 Negociar</h4>
-                   <div class="quick-offers"><div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*2})"><strong>X2</strong><br>$${item.price*2}</div><div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*3})"><strong>X3</strong><br>$${item.price*3}</div><div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*4})"><strong>X4</strong><br>$${item.price*4}</div></div>
-                   <div style="display:flex;gap:10px"><input type="number" id="cOffer" placeholder="Monto..." class="form-input" style="margin:0"><button class="btn btn-gold" style="width:auto" onclick="sendManualOffer(${item.id})">Enviar</button></div></div>`;
+          if(item.status === 'negotiating' && !myNeg) { ui += `<div class="list-card" style="text-align:center"><p>⚠️ Esta noticia está siendo negociada por otro medio.</p></div>`; } 
+          else if(item.licenseType === 'exclusive') { ui += `<button class="btn btn-mp" style="width:100%" onclick="buyDirect(${item.id})">Comprar Exclusivo $${item.price}</button>`; } 
+          else {
+            ui += `<button class="btn btn-mp" style="width:100%; margin-bottom:15px" onclick="buyDirect(${item.id})">Comprar Licencia Compartida $${item.price}</button><div class="offer-section"><h4 style="text-align:center;color:var(--gold);margin-bottom:10px">💎 Negociar</h4><div class="quick-offers"><div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*2})"><strong>X2</strong><br>$${item.price*2}</div><div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*3})"><strong>X3</strong><br>$${item.price*3}</div><div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*4})"><strong>X4</strong><br>$${item.price*4}</div></div><div style="display:flex;gap:10px"><input type="number" id="cOffer" placeholder="Monto..." class="form-input" style="margin:0"><button class="btn btn-gold" style="width:auto" onclick="sendManualOffer(${item.id})">Enviar</button></div></div>`;
           }
       }
   }
   document.getElementById('modalBody').innerHTML = ui;
   document.getElementById('modal').classList.add('active');
 }
-
 async function buyDirect(id) {
     const item = feed.find(x => x.id === id);
     if(activeUser.balance < item.price) return alert("Saldo insuficiente");
@@ -478,156 +450,76 @@ async function buyDirect(id) {
     processSale(item, item.price, activeUser.id);
     saveData(); renderMapMarkers(); closeModal(); renderAllViews(); alert("✅ Pago aprobado por Mercado Pago.");
 }
-
 function makeOffer(itemId, amount) {
     const existing = negotiations.find(n => n.newsId === itemId && n.buyerId === activeUser.id && n.status !== 'rejected');
     if(existing) return alert("Ya tienes una negociación activa.");
     const expiresAt = Date.now() + (15 * 60 * 1000);
     negotiations.push({ id: Date.now(), newsId: itemId, buyerId: activeUser.id, amount, status: 'pending', expiresAt });
     feed.find(x => x.id === itemId).status = 'negotiating';
-    addNotification(feed.find(x => x.id === itemId).ownerId, `Oferta de $${amount} recibida`, '💰');
+    addNotification(feed.find(x => x.id === itemId).ownerId, `Oferta de $${amount} recibida`, '💰', 'sales');
     saveData(); closeModal(); renderAllViews(); alert("Oferta enviada.");
 }
 function sendManualOffer(id) { const val = Number(document.getElementById('cOffer').value); if(val>0) makeOffer(id, val); }
-
 function showSellerPanel(negId) {
     const neg = negotiations.find(n => n.id === negId);
     const item = feed.find(f => f.id === neg.newsId);
     document.getElementById('modalTitle').textContent = 'Gestionar Oferta';
-    document.getElementById('modalBody').innerHTML = `
-        <div class="timer-box"><small>EXPIRA EN</small><div id="countdown" class="timer-countdown">15:00</div></div>
-        <div style="text-align:center;padding:20px;background:var(--bg);border-radius:15px;margin-bottom:15px"><h1 style="color:var(--gold);font-size:42px">$${neg.amount}</h1><p>${item.title}</p></div>
-        <div style="display:flex;gap:10px;margin-bottom:15px"><button class="btn btn-primary" onclick="acceptOffer(${negId})">ACEPTAR</button><button class="btn btn-danger" onclick="rejectOffer(${negId})">RECHAZAR</button></div>
-        <div style="border-top:1px solid var(--border);padding-top:15px"><label style="font-size:12px;color:var(--text-secondary)">Contraoferta:</label><div style="display:flex;gap:10px;margin-top:5px"><input type="number" id="counterAmt" class="form-input" style="margin:0" placeholder="$"><button class="btn btn-secondary" style="width:auto" onclick="sendCounter(${negId})">Enviar</button></div></div>`;
+    document.getElementById('modalBody').innerHTML = `<div class="timer-box"><small>EXPIRA EN</small><div id="countdown" class="timer-countdown">15:00</div></div><div style="text-align:center;padding:20px;background:var(--bg);border-radius:15px;margin-bottom:15px"><h1 style="color:var(--gold);font-size:42px">$${neg.amount}</h1><p>${item.title}</p></div><div style="display:flex;gap:10px;margin-bottom:15px"><button class="btn btn-primary" onclick="acceptOffer(${negId})">ACEPTAR</button><button class="btn btn-danger" onclick="rejectOffer(${negId})">RECHAZAR</button></div><div style="border-top:1px solid var(--border);padding-top:15px"><label style="font-size:12px;color:var(--text-secondary)">Contraoferta:</label><div style="display:flex;gap:10px;margin-top:5px"><input type="number" id="counterAmt" class="form-input" style="margin:0" placeholder="$"><button class="btn btn-secondary" style="width:auto" onclick="sendCounter(${negId})">Enviar</button></div></div>`;
     document.getElementById('modal').classList.add('active');
     startTimer(neg.expiresAt);
 }
 function startTimer(expiresAt) {
     if(activeInterval) clearInterval(activeInterval);
-    const update = () => {
-        const el = document.getElementById('countdown'); if(!el) return;
-        const diff = expiresAt - Date.now();
-        if(diff <= 0) { el.textContent = "00:00"; clearInterval(activeInterval); return; }
-        const mins = Math.floor(diff/60000); const secs = Math.floor((diff%60000)/1000);
-        el.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
+    const update = () => { const el = document.getElementById('countdown'); if(!el) return; const diff = expiresAt - Date.now(); if(diff <= 0) { el.textContent = "00:00"; clearInterval(activeInterval); return; } const mins = Math.floor(diff/60000); const secs = Math.floor((diff%60000)/1000); el.textContent = `${mins}:${secs.toString().padStart(2, '0')}`; };
     update(); activeInterval = setInterval(update, 1000);
 }
-function sendCounter(negId) {
-    const val = Number(document.getElementById('counterAmt').value); if(!val) return;
-    const neg = negotiations.find(n => n.id === negId);
-    neg.amount = val; neg.status = 'counter_pending'; neg.expiresAt = Date.now() + (15 * 60 * 1000); 
-    addNotification(neg.buyerId, `Contraoferta recibida: $${val}`, '🔄');
-    saveData(); closeModal(); renderAllViews(); alert("Contraoferta enviada.");
-}
-async function acceptOffer(id) {
-    const neg = negotiations.find(n => n.id === id);
-    const item = feed.find(f => f.id === neg.newsId);
-    neg.status = 'accepted';
-    await showProcessing();
-    processSale(item, neg.amount, neg.buyerId);
-    addNotification(neg.buyerId, `Oferta de $${neg.amount} aceptada.`, '✅');
-    saveData(); closeModal(); renderAllViews(); alert("Venta realizada.");
-}
-function rejectOffer(id) {
-    const neg = negotiations.find(n => n.id === id);
-    neg.status = 'rejected'; feed.find(x => x.id === neg.newsId).status = 'for_sale';
-    addNotification(neg.buyerId, `Oferta rechazada.`, '❌');
-    saveData(); closeModal(); renderAllViews(); alert("Oferta rechazada.");
-}
-async function acceptCounter(negId) {
-    const neg = negotiations.find(n => n.id === negId);
-    if(activeUser.balance < neg.amount) return alert("Saldo insuficiente");
-    const item = feed.find(f => f.id === neg.newsId);
-    neg.status = 'accepted';
-    await showProcessing();
-    processSale(item, neg.amount, activeUser.id);
-    addNotification(item.ownerId, `Contraoferta de $${neg.amount} aceptada.`, '✅');
-    saveData(); closeModal(); renderAllViews(); alert("Compra realizada.");
-}
+function sendCounter(negId) { const val = Number(document.getElementById('counterAmt').value); if(!val) return; const neg = negotiations.find(n => n.id === negId); neg.amount = val; neg.status = 'counter_pending'; neg.expiresAt = Date.now() + (15 * 60 * 1000); addNotification(neg.buyerId, `Contraoferta recibida: $${val}`, '🔄', 'sales'); saveData(); closeModal(); renderAllViews(); alert("Contraoferta enviada."); }
+async function acceptOffer(id) { const neg = negotiations.find(n => n.id === id); const item = feed.find(f => f.id === neg.newsId); neg.status = 'accepted'; await showProcessing(); processSale(item, neg.amount, neg.buyerId); addNotification(neg.buyerId, `Oferta de $${neg.amount} aceptada.`, '✅', 'sales'); saveData(); closeModal(); renderAllViews(); alert("Venta realizada."); }
+function rejectOffer(id) { const neg = negotiations.find(n => n.id === id); neg.status = 'rejected'; feed.find(x => x.id === neg.newsId).status = 'for_sale'; addNotification(neg.buyerId, `Oferta rechazada.`, '❌', 'sales'); saveData(); closeModal(); renderAllViews(); alert("Oferta rechazada."); }
+async function acceptCounter(negId) { const neg = negotiations.find(n => n.id === negId); if(activeUser.balance < neg.amount) return alert("Saldo insuficiente"); const item = feed.find(f => f.id === neg.newsId); neg.status = 'accepted'; await showProcessing(); processSale(item, neg.amount, activeUser.id); addNotification(item.ownerId, `Contraoferta de $${neg.amount} aceptada.`, '✅', 'sales'); saveData(); closeModal(); renderAllViews(); alert("Compra realizada."); }
 function rejectCounter(negId) { rejectOffer(negId); }
 
 function processSale(item, amount, buyerId) {
+    // LOGICA DE REVOCACIÓN (LEGAL)
+    if (item.licenseType === 'exclusive') {
+        item.status = 'sold';
+        // Si hay compradores previos, revocarles la licencia
+        const previousBuyers = item.buyers.filter(id => id !== buyerId);
+        previousBuyers.forEach(prevId => {
+            addNotification(prevId, `⚠️ LICENCIA REVOCADA: "${item.title}" ahora es exclusiva de otro medio.`, '⛔', 'sales');
+        });
+    }
     item.price = amount; 
     item.buyers.push(buyerId);
-    if(item.licenseType === 'exclusive') item.status = 'sold';
     users[buyerId].balance -= amount;
     users[item.ownerId].balance += amount;
-    // TRUST SCORE LOGIC
     users[item.ownerId].trustScore = (users[item.ownerId].trustScore || 80) + 5;
-    addNotification(item.ownerId, `¡Venta exitosa! TrustScore +5`, '⭐');
+    addNotification(item.ownerId, `¡Venta exitosa! TrustScore +5`, '⭐', 'profile');
 }
 
 // SUBIR
 document.getElementById('uploadForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    if(activeUser.id !== 'witness') return alert("Solo el vendedor puede subir.");
-    const btn = document.getElementById('btnUpload'); btn.textContent = "🛰️ Verificando..."; btn.disabled = true;
-    setTimeout(() => {
-        const title = document.getElementById('upTitle').value; const price = Number(document.getElementById('upPrice').value); const tags = document.getElementById('upTags').value; const lic = document.getElementById('licInput').value;
-        const newItem = { id: Date.now(), ownerId: activeUser.id, title: title, price: price, lat: -34.6037+(Math.random()-0.5)*0.05, lng: -58.3816+(Math.random()-0.5)*0.05, img: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800', licenseType: lic, status: 'for_sale', hashtags: tags, importance: 'high', trustScore: activeUser.trustScore, buyers: [], views: 0 };
-        feed.unshift(newItem); saveData(); renderMapMarkers(); renderAllViews(); e.target.reset(); closeModal(); showView('home'); btn.textContent = "📤 Publicar"; btn.disabled = false; alert("✅ Noticia subida.");
-    }, 1000);
+    e.preventDefault(); if(activeUser.id !== 'witness') return alert("Solo el vendedor puede subir."); const btn = document.getElementById('btnUpload'); btn.textContent = "🛰️ Verificando..."; btn.disabled = true; setTimeout(() => { const title = document.getElementById('upTitle').value; const price = Number(document.getElementById('upPrice').value); const tags = document.getElementById('upTags').value; const lic = document.getElementById('licInput').value; const newItem = { id: Date.now(), ownerId: activeUser.id, title: title, price: price, lat: -34.6037+(Math.random()-0.5)*0.05, lng: -58.3816+(Math.random()-0.5)*0.05, img: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800', licenseType: lic, status: 'for_sale', hashtags: tags, importance: 'high', trustScore: activeUser.trustScore, buyers: [], views: 0 }; feed.unshift(newItem); saveData(); renderMapMarkers(); renderAllViews(); e.target.reset(); closeModal(); showView('home'); btn.textContent = "📤 Publicar"; btn.disabled = false; alert("✅ Noticia subida."); }, 1000);
 });
 function toggleLegal(e, id) { e.stopPropagation(); const el = document.getElementById(id); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
-
-// VISTAS
-function showView(name) {
-    document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-    document.getElementById(`view-${name}`).style.display = 'block';
-    if(name === 'home') setTimeout(() => { if(!map) initMap(); else { map.invalidateSize(); renderMapMarkers(); } }, 100);
-    if(name === 'sales') { renderSales(); initChart(); } 
-    if(name === 'discover') renderGrid('discoverGrid', feed);
-    if(name === 'upload') document.getElementById('sugTags').textContent = ["#accidente", "#politica"].join(", ");
-    if(name === 'accounts') renderSubs();
-    const mapNav = {'home':0, 'discover':1, 'upload':2, 'sales':3, 'wallet':4};
-    if(mapNav[name] !== undefined) document.querySelectorAll('.nav-item')[mapNav[name]].classList.add('active');
-}
-
+function showView(name) { document.querySelectorAll('.view').forEach(v => v.style.display = 'none'); document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); document.getElementById(`view-${name}`).style.display = 'block'; if(name === 'home') setTimeout(() => { if(!map) initMap(); else { map.invalidateSize(); renderMapMarkers(); } }, 100); if(name === 'sales') { renderSales(); initChart(); } if(name === 'discover') renderGrid('discoverGrid', feed); if(name === 'upload') document.getElementById('sugTags').textContent = ["#accidente", "#politica"].join(", "); if(name === 'accounts') renderSubs(); const mapNav = {'home':0, 'discover':1, 'upload':2, 'sales':3, 'wallet':4}; if(mapNav[name] !== undefined) document.querySelectorAll('.nav-item')[mapNav[name]].classList.add('active'); }
 function renderSales() {
     const pending = negotiations.filter(n => n.status === 'pending' || n.status === 'counter_pending');
     const showNotif = (activeUser.id === 'witness' && pending.some(n => n.status === 'pending')) || (activeUser.id === 'media' && pending.some(n => n.status === 'counter_pending'));
-    document.getElementById('pendingOffersCard').style.display = showNotif ? 'block' : 'none';
-    document.getElementById('navNotifBadge').style.display = showNotif ? 'block' : 'none';
-    
+    document.getElementById('pendingOffersCard').style.display = showNotif ? 'block' : 'none'; document.getElementById('navNotifBadge').style.display = showNotif ? 'block' : 'none';
     document.getElementById('offersList').innerHTML = pending.map(n => {
-        if (activeUser.id === 'witness' && n.status === 'pending') 
-            return `<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg);padding:10px;border-radius:10px;margin-bottom:8px"><div><strong>$${n.amount}</strong><br><small>Oferta Nueva</small></div><button class="btn btn-primary" style="width:auto;padding:8px 15px" onclick="showSellerPanel(${n.id})">Gestionar</button></div>`;
-        if (activeUser.id === 'media' && n.status === 'counter_pending')
-             return `<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg);padding:10px;border-radius:10px;margin-bottom:8px"><div><strong>$${n.amount}</strong><br><small>Contraoferta recibida</small></div><button class="btn btn-mp" style="width:auto;padding:8px 15px" onclick="openDetail(${n.newsId})">Ver</button></div>`;
+        if (activeUser.id === 'witness' && n.status === 'pending') return `<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg);padding:10px;border-radius:10px;margin-bottom:8px"><div><strong>$${n.amount}</strong><br><small>Oferta Nueva</small></div><button class="btn btn-primary" style="width:auto;padding:8px 15px" onclick="showSellerPanel(${n.id})">Gestionar</button></div>`;
+        if (activeUser.id === 'media' && n.status === 'counter_pending') return `<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg);padding:10px;border-radius:10px;margin-bottom:8px"><div><strong>$${n.amount}</strong><br><small>Contraoferta recibida</small></div><button class="btn btn-mp" style="width:auto;padding:8px 15px" onclick="openDetail(${n.newsId})">Ver</button></div>`;
         return '';
     }).join('');
-    
-    if(activeUser.id === 'witness') {
-        const mySold = feed.filter(f => f.ownerId === activeUser.id && (f.status === 'sold' || f.buyers.length > 0));
-        document.getElementById('salesList').innerHTML = mySold.map(s => `<div class="list-item"><img src="${s.img}" class="list-item-image"><div class="list-item-content"><div class="list-item-title">${s.title}</div><small>Vendido</small></div><strong style="color:var(--success)">+$${s.price}</strong></div>`).join('');
-        document.getElementById('purchasesList').innerHTML = '<div style="padding:10px; color:var(--muted)">No compras noticias.</div>';
-    } else {
-        const myPurchases = feed.filter(f => f.buyers.includes(activeUser.id));
-        document.getElementById('purchasesList').innerHTML = myPurchases.map(p => `<div class="list-item"><img src="${p.img}" class="list-item-image"><div class="list-item-content"><div class="list-item-title">${p.title}</div><small>Adquirido</small></div><strong style="color:var(--accent)">-$${p.price}</strong></div>`).join('');
-        document.getElementById('salesList').innerHTML = '<div style="padding:10px; color:var(--muted)">No vendes noticias.</div>';
-    }
+    if(activeUser.id === 'witness') { const mySold = feed.filter(f => f.ownerId === activeUser.id && (f.status === 'sold' || f.buyers.length > 0)); document.getElementById('salesList').innerHTML = mySold.map(s => `<div class="list-item"><img src="${s.img}" class="list-item-image"><div class="list-item-content"><div class="list-item-title">${s.title}</div><small>Vendido</small></div><strong style="color:var(--success)">+$${s.price}</strong></div>`).join(''); document.getElementById('purchasesList').innerHTML = '<div style="padding:10px; color:var(--muted)">No compras noticias.</div>'; } 
+    else { const myPurchases = feed.filter(f => f.buyers.includes(activeUser.id)); document.getElementById('purchasesList').innerHTML = myPurchases.map(p => `<div class="list-item"><img src="${p.img}" class="list-item-image"><div class="list-item-content"><div class="list-item-title">${p.title}</div><small>Adquirido</small></div><strong style="color:var(--accent)">-$${p.price}</strong></div>`).join(''); document.getElementById('salesList').innerHTML = '<div style="padding:10px; color:var(--muted)">No vendes noticias.</div>'; }
 }
-
 function renderSubs() { document.getElementById('subaccountsList').innerHTML = subaccounts.map(s => `<div class="list-item"><img src="${s.img}" class="list-item-image" style="border-radius:50%; width:50px; height:50px"><div class="list-item-content"><div>${s.name}</div><small>${s.files} archivos</small></div></div>`).join(''); }
 function selectLic(el, type) { document.querySelectorAll('.license-option').forEach(o => o.classList.remove('selected')); el.classList.add('selected'); document.getElementById('licInput').value = type; }
 function closeModal() { document.getElementById('modal').classList.remove('active'); clearInterval(activeInterval); }
-
-let earningsChart = null;
-function initChart() {
-    if(earningsChart) { earningsChart.destroy(); earningsChart = null; }
-    const ctx = document.getElementById('earningsChart').getContext('2d');
-    earningsChart = new Chart(ctx, { type: 'bar', data: { labels: ['Lun','Mar','Mie','Jue','Vie','Sab','Dom'], datasets: [{ data: [50,90,45,130,110,200,75], backgroundColor: '#ff3b30', borderRadius:4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display:false} }, scales: { y:{display:false}, x:{grid:{display:false}} } } });
-}
-function updateChart(p, btn) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
-    if(p==='month') { earningsChart.data.labels = ['Sem 1','Sem 2','Sem 3','Sem 4']; earningsChart.data.datasets[0].data = [450, 800, 600, 1000]; }
-    else if(p==='year') { earningsChart.data.labels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; earningsChart.data.datasets[0].data = [1200,1500,1100,1700,1900,2400,2000,2100,2300,2700,2500,3400]; }
-    else { earningsChart.data.labels = ['Lun','Mar','Mie','Jue','Vie','Sab','Dom']; earningsChart.data.datasets[0].data = [50,90,45,130,110,200,75]; }
-    earningsChart.update();
-}
-
+let earningsChart = null; function initChart() { if(earningsChart) { earningsChart.destroy(); earningsChart = null; } const ctx = document.getElementById('earningsChart').getContext('2d'); earningsChart = new Chart(ctx, { type: 'bar', data: { labels: ['Lun','Mar','Mie','Jue','Vie','Sab','Dom'], datasets: [{ data: [50,90,45,130,110,200,75], backgroundColor: '#ff3b30', borderRadius:4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display:false} }, scales: { y:{display:false}, x:{grid:{display:false}} } } }); }
+function updateChart(p, btn) { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); if(p==='month') { earningsChart.data.labels = ['Sem 1','Sem 2','Sem 3','Sem 4']; earningsChart.data.datasets[0].data = [450, 800, 600, 1000]; } else if(p==='year') { earningsChart.data.labels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; earningsChart.data.datasets[0].data = [1200,1500,1100,1700,1900,2400,2000,2100,2300,2700,2500,3400]; } else { earningsChart.data.labels = ['Lun','Mar','Mie','Jue','Vie','Sab','Dom']; earningsChart.data.datasets[0].data = [50,90,45,130,110,200,75]; } earningsChart.update(); }
 document.getElementById('themeToggle').onclick = () => document.body.classList.toggle('light');
 document.getElementById('searchInput').oninput = (e) => { const v = e.target.value.toLowerCase(); renderGrid('discoverGrid', feed.filter(i => i.title.toLowerCase().includes(v) || i.hashtags.toLowerCase().includes(v))); };
 </script>
