@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Paywall News - Simulador v4.2</title>
+<title>Paywall News - Simulador v4.3</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -278,14 +278,12 @@ const defaultFeed = [
   {id:4, ownerId:'other', title:'Inundación en Palermo', price:200, lat:-34.5800, lng:-58.4200, img:'https://images.unsplash.com/photo-1548685913-fe6678babe8d?w=800', licenseType:'exclusive', status:'for_sale', hashtags: '#clima #alerta', importance:'high', trustScore: 95, buyers:[]},
   {id:5, ownerId:'other', title:'Derrumbe en Obra', price:120, lat:-34.6100, lng:-58.4000, img:'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#policiales', importance:'medium', trustScore: 88, buyers:[]}
 ];
-const defaultSales = [{title: 'Video Viral', amount: 50, date: '01/01/2026', img: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=100'},{title: 'Accidente Moto', amount: 100, date: '02/01/2026', img: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=100'}];
 let subaccounts = [{name: 'Cámara Frontal', files: 12, img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'}, {name: 'Dron Aéreo', files: 7, img: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100'}];
 
 // Cargar LocalStorage
 let feed = JSON.parse(localStorage.getItem('pw_feed')) || defaultFeed;
 let users = JSON.parse(localStorage.getItem('pw_users')) || usersDB;
 let negotiations = JSON.parse(localStorage.getItem('pw_negs')) || [];
-let salesHistory = JSON.parse(localStorage.getItem('pw_sales')) || defaultSales;
 let activeUser = null; 
 
 // LOGIN/LOGOUT
@@ -294,7 +292,7 @@ function logout() { localStorage.removeItem('pw_active_id'); location.reload(); 
 function initApp() { updateProfileUI(); updateWalletUI(); showView('home'); renderGrid('homeGrid', feed); }
 const storedId = localStorage.getItem('pw_active_id'); if (storedId && users[storedId]) { activeUser = users[storedId]; document.getElementById('login-screen').style.display = 'none'; initApp(); }
 
-function saveData() { localStorage.setItem('pw_feed', JSON.stringify(feed)); localStorage.setItem('pw_users', JSON.stringify(users)); localStorage.setItem('pw_negs', JSON.stringify(negotiations)); localStorage.setItem('pw_sales', JSON.stringify(salesHistory)); updateWalletUI(); }
+function saveData() { localStorage.setItem('pw_feed', JSON.stringify(feed)); localStorage.setItem('pw_users', JSON.stringify(users)); localStorage.setItem('pw_negs', JSON.stringify(negotiations)); updateWalletUI(); }
 function resetData() { localStorage.clear(); location.reload(); }
 
 function updateProfileUI() { document.getElementById('userNameDisplay').textContent = activeUser.name; document.getElementById('userRoleDisplay').textContent = activeUser.role; document.getElementById('userAvatar').textContent = activeUser.avatar; }
@@ -343,7 +341,6 @@ let activeInterval = null;
 
 function openDetail(id) {
   const item = feed.find(x => x.id === id);
-  // Buscar si YA tengo una negociación activa como comprador para este item
   const myNeg = negotiations.find(n => n.newsId === id && n.buyerId === activeUser.id && n.status !== 'rejected');
   
   document.getElementById('modalTitle').textContent = item.title;
@@ -358,9 +355,7 @@ function openDetail(id) {
   } else if (iBoughtIt) {
       ui += `<div class="list-card" style="text-align:center;background:rgba(52,199,89,0.1);border-color:var(--success)"><h3 style="color:var(--success)">✅ Contenido Desbloqueado</h3></div>`;
   } else {
-      // LOGICA COMPRADOR
       if (myNeg) {
-          // Ya existe negociación
           if (myNeg.status === 'pending') {
              ui += `<div class="list-card" style="text-align:center;border-color:var(--warning)"><h3 style="color:var(--warning)">⏳ Oferta Enviada: $${myNeg.amount}</h3><p>Esperando respuesta del vendedor...</p></div>`;
           } else if (myNeg.status === 'counter_pending') {
@@ -374,7 +369,6 @@ function openDetail(id) {
              </div>`;
           }
       } else {
-          // Nueva Compra/Oferta
           if(item.status === 'negotiating' && !myNeg) {
               ui += `<div class="list-card" style="text-align:center"><p>⚠️ Esta noticia está siendo negociada por otro medio.</p></div>`;
           } else if(item.licenseType === 'exclusive') {
@@ -406,10 +400,8 @@ function buyDirect(id) {
 }
 
 function makeOffer(itemId, amount) {
-    // Check duplicates
     const existing = negotiations.find(n => n.newsId === itemId && n.buyerId === activeUser.id && n.status !== 'rejected');
     if(existing) return alert("Ya tienes una negociación activa.");
-
     const expiresAt = Date.now() + (15 * 60 * 1000);
     negotiations.push({ id: Date.now(), newsId: itemId, buyerId: activeUser.id, amount, status: 'pending', expiresAt });
     feed.find(x => x.id === itemId).status = 'negotiating';
@@ -417,7 +409,6 @@ function makeOffer(itemId, amount) {
 }
 function sendManualOffer(id) { const val = Number(document.getElementById('cOffer').value); if(val>0) makeOffer(id, val); }
 
-// GESTIÓN VENDEDOR
 function showSellerPanel(negId) {
     const neg = negotiations.find(n => n.id === negId);
     const item = feed.find(f => f.id === neg.newsId);
@@ -436,8 +427,6 @@ function showSellerPanel(negId) {
             <div style="display:flex;gap:10px;margin-top:5px"><input type="number" id="counterAmt" class="form-input" style="margin:0" placeholder="$"><button class="btn btn-secondary" style="width:auto" onclick="sendCounter(${negId})">Enviar</button></div>
         </div>`;
     document.getElementById('modal').classList.add('active');
-    
-    // FIX TIMER
     startTimer(neg.expiresAt);
 }
 
@@ -461,17 +450,20 @@ function sendCounter(negId) {
     if(!val) return;
     const neg = negotiations.find(n => n.id === negId);
     neg.amount = val;
-    neg.status = 'counter_pending'; // ESTADO CLAVE: El comprador ahora debe responder
-    neg.expiresAt = Date.now() + (15 * 60 * 1000); // Reset timer
+    neg.status = 'counter_pending'; 
+    neg.expiresAt = Date.now() + (15 * 60 * 1000); 
     saveData(); closeModal(); renderAllViews(); alert("Contraoferta enviada al comprador.");
 }
 
 function acceptOffer(id) {
     const neg = negotiations.find(n => n.id === id);
     const item = feed.find(f => f.id === neg.newsId);
+    
+    // CORRECCIÓN PRECIO: Actualizar precio base con el acordado
+    item.price = neg.amount; 
+    
     item.status = 'sold'; neg.status = 'accepted'; item.buyers.push(neg.buyerId);
     users[neg.buyerId].balance -= neg.amount; activeUser.balance += neg.amount;
-    salesHistory.unshift({title: item.title, amount: neg.amount, date: new Date().toLocaleString(), img: item.img});
     saveData(); closeModal(); renderAllViews(); alert("Venta realizada.");
 }
 function rejectOffer(id) {
@@ -480,15 +472,17 @@ function rejectOffer(id) {
     saveData(); closeModal(); renderAllViews(); alert("Oferta rechazada.");
 }
 
-// ACCIONES COMPRADOR ANTE CONTRAOFERTA
 function acceptCounter(negId) {
-    // Reutilizamos acceptOffer logic pero triggered by buyer
     const neg = negotiations.find(n => n.id === negId);
     if(activeUser.balance < neg.amount) return alert("Saldo insuficiente");
     const item = feed.find(f => f.id === neg.newsId);
+    
+    // CORRECCIÓN PRECIO
+    item.price = neg.amount;
+
     item.status = 'sold'; neg.status = 'accepted'; item.buyers.push(activeUser.id);
     activeUser.balance -= neg.amount; users[item.ownerId].balance += neg.amount;
-    saveData(); closeModal(); renderAllViews(); alert("Contraoferta aceptada. Compra realizada.");
+    saveData(); closeModal(); renderAllViews(); alert("Contraoferta aceptada.");
 }
 function rejectCounter(negId) { rejectOffer(negId); }
 
@@ -511,21 +505,20 @@ function showView(name) {
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
     document.getElementById(`view-${name}`).style.display = 'block';
     if(name === 'home') setTimeout(() => { if(!map) initMap(); else { map.invalidateSize(); renderMapMarkers(); } }, 100);
-    if(name === 'sales') renderSales();
+    if(name === 'sales') { renderSales(); initChart(); } // INIT CHART ALWAYS
     if(name === 'discover') renderGrid('discoverGrid', feed);
     if(name === 'upload') document.getElementById('sugTags').textContent = ["#accidente", "#politica"].join(", ");
     if(name === 'accounts') renderSubs();
     const mapNav = {'home':0, 'discover':1, 'upload':2, 'sales':3, 'wallet':4};
     if(mapNav[name] !== undefined) document.querySelectorAll('.nav-item')[mapNav[name]].classList.add('active');
 }
+
 function renderSales() {
     const pending = negotiations.filter(n => n.status === 'pending' || n.status === 'counter_pending');
-    // Mostrar notif si soy vendedor y hay pending, O si soy comprador y hay counter_pending
     const showNotif = (activeUser.id === 'witness' && pending.some(n => n.status === 'pending')) || (activeUser.id === 'media' && pending.some(n => n.status === 'counter_pending'));
-    
     document.getElementById('pendingOffersCard').style.display = showNotif ? 'block' : 'none';
+    
     document.getElementById('offersList').innerHTML = pending.map(n => {
-        // Logica para mostrar texto correcto segun rol
         if (activeUser.id === 'witness' && n.status === 'pending') 
             return `<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg);padding:10px;border-radius:10px;margin-bottom:8px"><div><strong>$${n.amount}</strong><br><small>Oferta Nueva</small></div><button class="btn btn-primary" style="width:auto;padding:8px 15px" onclick="showSellerPanel(${n.id})">Gestionar</button></div>`;
         if (activeUser.id === 'media' && n.status === 'counter_pending')
@@ -534,7 +527,9 @@ function renderSales() {
     }).join('');
     
     if(activeUser.id === 'witness') {
-        document.getElementById('salesList').innerHTML = salesHistory.map(s => `<div class="list-item"><img src="${s.img}" class="list-item-image"><div class="list-item-content"><div class="list-item-title">${s.title}</div><small>Vendido</small></div><strong style="color:var(--success)">+$${s.amount}</strong></div>`).join('');
+        // CORRECCION V4.3: Generar historial desde el FEED real
+        const mySold = feed.filter(f => f.ownerId === activeUser.id && (f.status === 'sold' || f.buyers.length > 0));
+        document.getElementById('salesList').innerHTML = mySold.map(s => `<div class="list-item"><img src="${s.img}" class="list-item-image"><div class="list-item-content"><div class="list-item-title">${s.title}</div><small>Vendido</small></div><strong style="color:var(--success)">+$${s.price}</strong></div>`).join('');
         document.getElementById('purchasesList').innerHTML = '<div style="padding:10px; color:var(--muted)">No compras noticias.</div>';
     } else {
         const myPurchases = feed.filter(f => f.buyers.includes(activeUser.id));
@@ -542,11 +537,25 @@ function renderSales() {
         document.getElementById('salesList').innerHTML = '<div style="padding:10px; color:var(--muted)">No vendes noticias.</div>';
     }
 }
+
 function renderSubs() { document.getElementById('subaccountsList').innerHTML = subaccounts.map(s => `<div class="list-item"><img src="${s.img}" class="list-item-image" style="border-radius:50%; width:50px; height:50px"><div class="list-item-content"><div>${s.name}</div><small>${s.files} archivos</small></div></div>`).join(''); }
 function selectLic(el, type) { document.querySelectorAll('.license-option').forEach(o => o.classList.remove('selected')); el.classList.add('selected'); document.getElementById('licInput').value = type; }
 function closeModal() { document.getElementById('modal').classList.remove('active'); clearInterval(activeInterval); }
-let earningsChart = null; function initChart() { if(earningsChart) return; const ctx = document.getElementById('earningsChart').getContext('2d'); earningsChart = new Chart(ctx, { type: 'bar', data: { labels: ['Lun','Mar','Mie','Jue','Vie','Sab','Dom'], datasets: [{ data: [50,90,45,130,110,200,75], backgroundColor: '#ff3b30', borderRadius:4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display:false} }, scales: { y:{display:false}, x:{grid:{display:false}} } } }); }
-function updateChart(p, btn) { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); if(p==='month') { earningsChart.data.labels = ['Sem 1','Sem 2','Sem 3','Sem 4']; earningsChart.data.datasets[0].data = [450, 800, 600, 1000]; } else if(p==='year') { earningsChart.data.labels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; earningsChart.data.datasets[0].data = [1200,1500,1100,1700,1900,2400,2000,2100,2300,2700,2500,3400]; } else { earningsChart.data.labels = ['Lun','Mar','Mie','Jue','Vie','Sab','Dom']; earningsChart.data.datasets[0].data = [50,90,45,130,110,200,75]; } earningsChart.update(); }
+
+let earningsChart = null;
+function initChart() {
+    // FIX CHART: Destroy old instance
+    if(earningsChart) { earningsChart.destroy(); earningsChart = null; }
+    const ctx = document.getElementById('earningsChart').getContext('2d');
+    earningsChart = new Chart(ctx, { type: 'bar', data: { labels: ['Lun','Mar','Mie','Jue','Vie','Sab','Dom'], datasets: [{ data: [50,90,45,130,110,200,75], backgroundColor: '#ff3b30', borderRadius:4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display:false} }, scales: { y:{display:false}, x:{grid:{display:false}} } } });
+}
+function updateChart(p, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+    if(p==='month') { earningsChart.data.labels = ['Sem 1','Sem 2','Sem 3','Sem 4']; earningsChart.data.datasets[0].data = [450, 800, 600, 1000]; }
+    else if(p==='year') { earningsChart.data.labels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; earningsChart.data.datasets[0].data = [1200,1500,1100,1700,1900,2400,2000,2100,2300,2700,2500,3400]; }
+    else { earningsChart.data.labels = ['Lun','Mar','Mie','Jue','Vie','Sab','Dom']; earningsChart.data.datasets[0].data = [50,90,45,130,110,200,75]; }
+    earningsChart.update();
+}
 
 document.getElementById('themeToggle').onclick = () => document.body.classList.toggle('light');
 document.getElementById('searchInput').oninput = (e) => { const v = e.target.value.toLowerCase(); renderGrid('discoverGrid', feed.filter(i => i.title.toLowerCase().includes(v) || i.hashtags.toLowerCase().includes(v))); };
