@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Paywall News - Demo MP</title>
+<title>Paywall News - Versión 5.1 Final</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -13,7 +13,7 @@
   --accent: #ff3b30; --accent-hover: #ff5449; --border: rgba(255,255,255,0.06);
   --shadow: rgba(0,0,0,0.3); --overlay: rgba(0,0,0,0.7); --watermark: rgba(255,255,255,0.08);
   --success: #34c759; --warning: #ffcc00; --info: #0a84ff; --gold: #ffd700;
-  --mp-blue: #009EE3; /* Color MercadoPago */
+  --mp-blue: #009EE3; /* MercadoPago Blue */
 }
 body.light {
   --bg: #f8f9fa; --bg-secondary: #ffffff; --card: #ffffff;
@@ -25,8 +25,21 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sa
 
 header { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
-.header-actions { display: flex; gap: 15px; }
+.header-actions { display: flex; gap: 15px; align-items: center; }
 .container { max-width: 1200px; margin: 0 auto; padding: 20px; padding-bottom: 110px; }
+
+/* NOTIFICACIONES */
+.notif-container { position: relative; }
+.notif-btn { position: relative; background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; }
+.notif-dot { position: absolute; top: 0; right: 0; width: 10px; height: 10px; background: var(--accent); border-radius: 50%; border: 2px solid var(--bg-secondary); display: none; }
+.notif-dropdown { position: absolute; top: 50px; right: -10px; width: 300px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden; z-index: 2000; }
+.notif-dropdown.active { display: flex; }
+.notif-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 14px; background: var(--bg-secondary); }
+.notif-list { max-height: 300px; overflow-y: auto; }
+.notif-item { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: start; transition: 0.2s; font-size: 13px; }
+.notif-item:hover { background: var(--bg); }
+.notif-icon { font-size: 16px; margin-top: 2px; }
+.notif-time { font-size: 11px; color: var(--text-secondary); margin-top: 4px; display: block; }
 
 /* MAPA */
 .map-container { height: 360px; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px var(--shadow); margin-bottom: 24px; position: relative; border: 1px solid var(--border); z-index: 1; }
@@ -47,18 +60,17 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 .news-card { background: var(--card); border-radius: 16px; overflow: hidden; position: relative; cursor: pointer; transition: 0.3s; border: 1px solid var(--border); }
 .news-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px var(--shadow); }
 .news-card.is-mine { border: 2px solid var(--info); box-shadow: 0 0 15px rgba(10, 132, 255, 0.15); }
-
 .news-card-image { width: 100%; aspect-ratio: 16/10; position: relative; overflow: hidden; }
 .news-card-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
-.news-card:hover img { transform: scale(1.05); }
 
 .watermark-overlay { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); pointer-events: none; z-index: 5; overflow: hidden; }
 .watermark-cell { display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-25deg); color: var(--watermark); text-align: center; }
 .wm-brand { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
-.wm-user { font-size: 7px; font-weight: 400; margin-top: 2px; }
 
 .price-badge { position: absolute; top: 12px; right: 12px; background: var(--overlay); color: white; padding: 6px 10px; border-radius: 8px; font-weight: 700; font-size: 13px; z-index: 10; backdrop-filter: blur(5px); }
 .license-badge { position: absolute; top: 12px; left: 12px; padding: 5px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; z-index: 10; text-transform: uppercase; backdrop-filter: blur(5px); }
+.view-counter { position: absolute; bottom: 12px; left: 12px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; display: flex; align-items: center; gap: 4px; z-index: 10; }
+
 .lic-exclusive { background: linear-gradient(135deg, #ffd700, #ffc107); color: #664d00; }
 .lic-nonexclusive { background: rgba(0, 122, 255, 0.9); color: white; }
 .trust-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; background: rgba(52, 199, 89, 0.15); color: var(--success); border: 1px solid var(--success); margin-top: 5px; }
@@ -96,7 +108,6 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 /* MERCADOPAGO STYLES */
 .btn-mp { background: var(--mp-blue); color: white; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .btn-mp:hover { filter: brightness(1.1); }
-.mp-logo-text { font-style: italic; font-weight: 900; letter-spacing: -0.5px; }
 
 /* LOADING OVERLAY */
 .mp-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 6000; display: none; flex-direction: column; align-items: center; justify-content: center; color: #333; }
@@ -143,6 +154,15 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 <header>
   <div class="brand"><span style="font-size: 24px;">📰</span><span>Paywall News</span></div>
   <div class="header-actions">
+    <div class="notif-container">
+        <button class="notif-btn" onclick="toggleNotif()">
+            🔔<span id="notifDot" class="notif-dot"></span>
+        </button>
+        <div id="notifDropdown" class="notif-dropdown">
+            <div class="notif-header">Notificaciones</div>
+            <div id="notifList" class="notif-list"></div>
+        </div>
+    </div>
     <button class="icon-btn" id="themeToggle" style="background:none; border:none; color:var(--text); font-size:20px; cursor:pointer">🌙</button>
     <button class="icon-btn" onclick="showView('profile')" style="background:none; border:none; color:var(--text); font-size:20px; cursor:pointer">👤</button>
   </div>
@@ -244,7 +264,10 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
     <div class="list-card" style="text-align:center">
         <div style="font-size:60px" id="userAvatar">👤</div>
         <h2 id="userNameDisplay">Usuario</h2>
-        <p id="userRoleDisplay" style="color:var(--success)">Rol</p>
+        <div style="display:flex; justify-content:center; gap:10px; align-items:center; margin-top:5px">
+            <p id="userRoleDisplay" style="color:var(--text-secondary)">Rol</p>
+            <div id="userTrustDisplay" class="trust-badge"></div>
+        </div>
     </div>
     <div class="list-card" onclick="logout()" style="cursor:pointer; text-align:center; color:var(--accent)">🔄 <strong>Cambiar de Usuario</strong></div>
     <div class="list-card" onclick="showView('accounts')" style="cursor:pointer">
@@ -268,7 +291,7 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
   <div class="nav-item active" onclick="showView('home')"><div class="nav-item-icon">🏠</div>Inicio</div>
   <div class="nav-item" onclick="showView('discover')"><div class="nav-item-icon">🔍</div>Explorar</div>
   <div class="nav-item" onclick="showView('upload')"><div class="nav-item-icon">📤</div>Subir</div>
-  <div class="nav-item" onclick="showView('sales')"><div id="navNotif" class="notif-badge"></div><div class="nav-item-icon">📊</div>Ventas</div>
+  <div class="nav-item" onclick="showView('sales')"><div id="navNotifBadge" class="notif-badge"></div><div class="nav-item-icon">📊</div>Ventas</div>
   <div class="nav-item" onclick="showView('wallet')"><div class="nav-item-icon">💰</div>Wallet</div>
 </div>
 
@@ -284,18 +307,18 @@ header { height: 64px; display: flex; align-items: center; justify-content: spac
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// ============ DATOS INICIALES ============
+// ============ DATOS INICIALES CON GAMIFICATION ============
 const usersDB = {
-    'witness': { id: 'witness', name: 'Matías (Vendedor)', role: 'Fuente Directa', balance: 150, avatar: '📱', mpLinked: false },
-    'media': { id: 'media', name: 'InfoGlobal (Medio)', role: 'Prensa', balance: 5000, avatar: '📺', mpLinked: true }
+    'witness': { id: 'witness', name: 'Matías (Vendedor)', role: 'Fuente Directa', balance: 150, avatar: '📱', mpLinked: false, trustScore: 80, notifications: [] },
+    'media': { id: 'media', name: 'InfoGlobal (Medio)', role: 'Prensa', balance: 5000, avatar: '📺', mpLinked: true, trustScore: 100, notifications: [] }
 };
 
 const defaultFeed = [
-  {id:1, ownerId:'witness', title:'Choque en Av. Mitre', price:50, lat:-34.6037, lng:-58.3816, img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#accidente #transito', importance:'high', trustScore: 98, buyers:[]},
-  {id:2, ownerId:'witness', title:'Incendio en Fábrica', price:150, lat:-34.6070, lng:-58.3772, img:'https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#urgente #quilmes', importance:'medium', trustScore: 85, buyers:[]},
-  {id:3, ownerId:'other', title:'Protesta en el Obelisco', price:80, lat:-34.6030, lng:-58.3810, img:'https://images.unsplash.com/photo-1590856029826-c7a73142bbf1?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#protesta #centro', importance:'medium', trustScore: 90, buyers:[]},
-  {id:4, ownerId:'other', title:'Inundación en Palermo', price:200, lat:-34.5800, lng:-58.4200, img:'https://images.unsplash.com/photo-1548685913-fe6678babe8d?w=800', licenseType:'exclusive', status:'for_sale', hashtags: '#clima #alerta', importance:'high', trustScore: 95, buyers:[]},
-  {id:5, ownerId:'other', title:'Derrumbe en Obra', price:120, lat:-34.6100, lng:-58.4000, img:'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#policiales', importance:'medium', trustScore: 88, buyers:[]}
+  {id:1, ownerId:'witness', title:'Choque en Av. Mitre', price:50, lat:-34.6037, lng:-58.3816, img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#accidente #transito', importance:'high', trustScore: 98, buyers:[], views: 45},
+  {id:2, ownerId:'witness', title:'Incendio en Fábrica', price:150, lat:-34.6070, lng:-58.3772, img:'https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#urgente #quilmes', importance:'medium', trustScore: 85, buyers:[], views: 120},
+  {id:3, ownerId:'other', title:'Protesta en el Obelisco', price:80, lat:-34.6030, lng:-58.3810, img:'https://images.unsplash.com/photo-1590856029826-c7a73142bbf1?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#protesta #centro', importance:'medium', trustScore: 90, buyers:[], views: 200},
+  {id:4, ownerId:'other', title:'Inundación en Palermo', price:200, lat:-34.5800, lng:-58.4200, img:'https://images.unsplash.com/photo-1548685913-fe6678babe8d?w=800', licenseType:'exclusive', status:'for_sale', hashtags: '#clima #alerta', importance:'high', trustScore: 95, buyers:[], views: 15},
+  {id:5, ownerId:'other', title:'Derrumbe en Obra', price:120, lat:-34.6100, lng:-58.4000, img:'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800', licenseType:'nonexclusive', status:'for_sale', hashtags: '#policiales', importance:'medium', trustScore: 88, buyers:[], views: 60}
 ];
 let subaccounts = [{name: 'Cámara Frontal', files: 12, img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'}, {name: 'Dron Aéreo', files: 7, img: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100'}];
 
@@ -304,21 +327,26 @@ let users = JSON.parse(localStorage.getItem('pw_users')) || usersDB;
 let negotiations = JSON.parse(localStorage.getItem('pw_negs')) || [];
 let activeUser = null; 
 
-// LOGIN/LOGOUT
+// INIT
 function loginAs(userId) { activeUser = users[userId]; localStorage.setItem('pw_active_id', userId); document.getElementById('login-screen').style.display = 'none'; initApp(); }
 function logout() { localStorage.removeItem('pw_active_id'); location.reload(); }
-function initApp() { updateProfileUI(); updateWalletUI(); showView('home'); renderGrid('homeGrid', feed); }
+function initApp() { updateProfileUI(); updateWalletUI(); renderNotifications(); showView('home'); renderGrid('homeGrid', feed); startSimulation(); }
 const storedId = localStorage.getItem('pw_active_id'); if (storedId && users[storedId]) { activeUser = users[storedId]; document.getElementById('login-screen').style.display = 'none'; initApp(); }
 
-function saveData() { localStorage.setItem('pw_feed', JSON.stringify(feed)); localStorage.setItem('pw_users', JSON.stringify(users)); localStorage.setItem('pw_negs', JSON.stringify(negotiations)); updateWalletUI(); }
+function saveData() { localStorage.setItem('pw_feed', JSON.stringify(feed)); localStorage.setItem('pw_users', JSON.stringify(users)); localStorage.setItem('pw_negs', JSON.stringify(negotiations)); updateWalletUI(); renderNotifications(); }
 function resetData() { localStorage.clear(); location.reload(); }
 
-function updateProfileUI() { document.getElementById('userNameDisplay').textContent = activeUser.name; document.getElementById('userRoleDisplay').textContent = activeUser.role; document.getElementById('userAvatar').textContent = activeUser.avatar; }
+function updateProfileUI() { 
+    document.getElementById('userNameDisplay').textContent = activeUser.name; 
+    document.getElementById('userRoleDisplay').textContent = activeUser.role; 
+    document.getElementById('userAvatar').textContent = activeUser.avatar; 
+    document.getElementById('userTrustDisplay').textContent = `🛡️ Trust: ${activeUser.trustScore || 80}`;
+}
 function updateWalletUI() { 
     document.getElementById('walletBalance').textContent = `$${activeUser.balance}`;
     const mpContainer = document.getElementById('mpConnectState');
     if(activeUser.mpLinked) {
-        mpContainer.innerHTML = `<button class="btn btn-mp" onclick="withdrawMP()">Retirar a <span class="mp-logo-text">Mercado Pago</span></button><div style="text-align:center; margin-top:10px; font-size:12px; color:var(--success)">✅ Cuenta Vinculada</div>`;
+        mpContainer.innerHTML = `<button class="btn btn-mp" onclick="withdrawMP()">Retirar a Mercado Pago</button><div style="text-align:center; margin-top:10px; font-size:12px; color:var(--success)">✅ Cuenta Vinculada</div>`;
     } else {
         mpContainer.innerHTML = `<button class="btn btn-secondary" onclick="linkMP()">🔗 Vincular Mercado Pago</button>`;
     }
@@ -327,23 +355,41 @@ function updateWalletUI() {
 // SIMULACION MP
 function linkMP() {
     const alias = prompt("Ingresa tu Alias o CVU de MercadoPago:");
-    if(alias) {
-        activeUser.mpLinked = true;
-        saveData();
-        alert("✅ Cuenta vinculada exitosamente.");
-    }
+    if(alias) { activeUser.mpLinked = true; saveData(); alert("✅ Cuenta vinculada exitosamente."); }
 }
 function withdrawMP() {
     if(activeUser.balance <= 0) return alert("Sin fondos disponibles.");
     document.getElementById('mpOverlay').style.display = 'flex';
-    setTimeout(() => {
-        document.getElementById('mpOverlay').style.display = 'none';
-        activeUser.balance = 0;
-        saveData();
-        alert("💸 Fondos enviados a tu cuenta MercadoPago.");
-    }, 2000);
+    setTimeout(() => { document.getElementById('mpOverlay').style.display = 'none'; activeUser.balance = 0; saveData(); alert("💸 Fondos enviados a tu cuenta MercadoPago."); }, 2000);
 }
 function showProcessing() { return new Promise(r => { document.getElementById('mpOverlay').style.display = 'flex'; setTimeout(() => { document.getElementById('mpOverlay').style.display = 'none'; r(); }, 2000); }); }
+
+// NOTIFICACIONES & SIMULADOR
+function toggleNotif() { const list = document.getElementById('notifDropdown'); list.classList.toggle('active'); document.getElementById('notifDot').style.display = 'none'; }
+function addNotification(userId, text, icon='🔔') {
+    if(!users[userId].notifications) users[userId].notifications = [];
+    users[userId].notifications.unshift({text, icon, time: new Date().toLocaleTimeString()});
+    if(users[userId].notifications.length > 20) users[userId].notifications.pop();
+    saveData();
+}
+function renderNotifications() {
+    const list = document.getElementById('notifList');
+    const notifs = activeUser.notifications || [];
+    if(notifs.length === 0) { list.innerHTML = '<div style="padding:15px;color:var(--text-secondary);text-align:center">Sin novedades</div>'; return; }
+    list.innerHTML = notifs.map(n => `<div class="notif-item"><div class="notif-icon">${n.icon}</div><div><div>${n.text}</div><span class="notif-time">${n.time}</span></div></div>`).join('');
+    if(notifs.length > 0) document.getElementById('notifDot').style.display = 'block';
+}
+function startSimulation() {
+    setInterval(() => {
+        const myItems = feed.filter(f => f.ownerId === 'witness' && f.status === 'for_sale');
+        if(myItems.length > 0) {
+            const item = myItems[Math.floor(Math.random() * myItems.length)];
+            item.views = (item.views || 0) + Math.floor(Math.random() * 5);
+            if(item.views > 50 && item.views < 55) { if(activeUser.id === 'witness') addNotification('witness', `🔥 Tu noticia "${item.title}" está siendo muy vista.`, '📈'); }
+            if(document.getElementById('view-home').style.display === 'block') renderGrid('homeGrid', feed);
+        }
+    }, 3000);
+}
 
 // MAPA
 let map = null; let markersLayer = L.layerGroup(); let userMarker = null;
@@ -377,7 +423,7 @@ function renderGrid(id, items) {
     if(item.buyers.includes(activeUser.id)) { statusLabel='✅ Adquirida'; statusColor='var(--info)'; }
     const showWm = (item.ownerId !== activeUser.id) && !item.buyers.includes(activeUser.id);
     return `<div class="news-card ${mineClass}" onclick="openDetail(${item.id})">
-      <div class="news-card-image"><img src="${item.img}">${showWm?generateWatermark():''}<div class="price-badge">$${item.price}</div><div class="license-badge ${item.licenseType==='exclusive'?'lic-exclusive':'lic-nonexclusive'}">${item.licenseType==='exclusive'?'🏆':'🌐'}</div></div>
+      <div class="news-card-image"><img src="${item.img}">${showWm?generateWatermark():''}<div class="price-badge">$${item.price}</div><div class="view-counter">👁️ ${item.views||0}</div><div class="license-badge ${item.licenseType==='exclusive'?'lic-exclusive':'lic-nonexclusive'}">${item.licenseType==='exclusive'?'🏆':'🌐'}</div></div>
       <div style="padding:15px"><div class="list-item-title">${item.title}</div>${getTrustBadge(item.trustScore||0)}<div style="font-size:12px;color:var(--info);margin:5px 0">${item.hashtags}</div><small style="color:${statusColor}">${statusLabel}</small></div>
     </div>`;
   }).join('');
@@ -389,7 +435,6 @@ let activeInterval = null;
 function openDetail(id) {
   const item = feed.find(x => x.id === id);
   const myNeg = negotiations.find(n => n.newsId === id && n.buyerId === activeUser.id && n.status !== 'rejected');
-  
   document.getElementById('modalTitle').textContent = item.title;
   const isOwner = item.ownerId === activeUser.id;
   const iBoughtIt = item.buyers.includes(activeUser.id);
@@ -407,27 +452,17 @@ function openDetail(id) {
              ui += `<div class="list-card" style="text-align:center;border-color:var(--warning)"><h3 style="color:var(--warning)">⏳ Oferta Enviada: $${myNeg.amount}</h3><p>Esperando respuesta del vendedor...</p></div>`;
           } else if (myNeg.status === 'counter_pending') {
              ui += `<div class="list-card" style="text-align:center;border-color:var(--gold);background:rgba(255,215,0,0.05)">
-                <h3 style="color:var(--gold)">🔄 Contraoferta: $${myNeg.amount}</h3>
-                <p>El vendedor pide este monto.</p>
-                <div style="display:flex;gap:10px;justify-content:center;margin-top:10px">
-                    <button class="btn btn-primary" onclick="acceptCounter(${myNeg.id})">ACEPTAR $${myNeg.amount}</button>
-                    <button class="btn btn-danger" onclick="rejectCounter(${myNeg.id})">RECHAZAR</button>
-                </div>
-             </div>`;
+                <h3 style="color:var(--gold)">🔄 Contraoferta: $${myNeg.amount}</h3><div style="display:flex;gap:10px;justify-content:center;margin-top:10px"><button class="btn btn-primary" onclick="acceptCounter(${myNeg.id})">ACEPTAR</button><button class="btn btn-danger" onclick="rejectCounter(${myNeg.id})">RECHAZAR</button></div></div>`;
           }
       } else {
           if(item.status === 'negotiating' && !myNeg) {
               ui += `<div class="list-card" style="text-align:center"><p>⚠️ Esta noticia está siendo negociada por otro medio.</p></div>`;
           } else if(item.licenseType === 'exclusive') {
-            ui += `<button class="btn btn-mp" style="width:100%" onclick="buyDirect(${item.id})"><span class="mp-logo-text">Mercado Pago</span> - Comprar Exclusivo $${item.price}</button>`;
+            ui += `<button class="btn btn-mp" style="width:100%" onclick="buyDirect(${item.id})">Comprar Exclusivo $${item.price}</button>`;
           } else {
-            ui += `<button class="btn btn-mp" style="width:100%; margin-bottom:15px" onclick="buyDirect(${item.id})"><span class="mp-logo-text">Mercado Pago</span> - Comprar $${item.price}</button>
+            ui += `<button class="btn btn-mp" style="width:100%; margin-bottom:15px" onclick="buyDirect(${item.id})">Comprar Licencia Compartida $${item.price}</button>
                    <div class="offer-section"><h4 style="text-align:center;color:var(--gold);margin-bottom:10px">💎 Negociar</h4>
-                   <div class="quick-offers">
-                       <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*2})"><strong>X2</strong><br>$${item.price*2}</div>
-                       <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*3})"><strong>X3</strong><br>$${item.price*3}</div>
-                       <div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*4})"><strong>X4</strong><br>$${item.price*4}</div>
-                   </div>
+                   <div class="quick-offers"><div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*2})"><strong>X2</strong><br>$${item.price*2}</div><div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*3})"><strong>X3</strong><br>$${item.price*3}</div><div class="quick-offer-btn" onclick="makeOffer(${item.id}, ${item.price*4})"><strong>X4</strong><br>$${item.price*4}</div></div>
                    <div style="display:flex;gap:10px"><input type="number" id="cOffer" placeholder="Monto..." class="form-input" style="margin:0"><button class="btn btn-gold" style="width:auto" onclick="sendManualOffer(${item.id})">Enviar</button></div></div>`;
           }
       }
@@ -439,15 +474,9 @@ function openDetail(id) {
 async function buyDirect(id) {
     const item = feed.find(x => x.id === id);
     if(activeUser.balance < item.price) return alert("Saldo insuficiente");
-    
-    await showProcessing(); // SIMULACION PAGO
-    
-    activeUser.balance -= item.price;
-    users[item.ownerId].balance += item.price;
-    item.buyers.push(activeUser.id);
-    if(item.licenseType === 'exclusive') item.status = 'sold';
-    saveData(); renderMapMarkers(); closeModal(); renderAllViews(); 
-    alert("✅ Pago aprobado por Mercado Pago.");
+    await showProcessing();
+    processSale(item, item.price, activeUser.id);
+    saveData(); renderMapMarkers(); closeModal(); renderAllViews(); alert("✅ Pago aprobado por Mercado Pago.");
 }
 
 function makeOffer(itemId, amount) {
@@ -456,6 +485,7 @@ function makeOffer(itemId, amount) {
     const expiresAt = Date.now() + (15 * 60 * 1000);
     negotiations.push({ id: Date.now(), newsId: itemId, buyerId: activeUser.id, amount, status: 'pending', expiresAt });
     feed.find(x => x.id === itemId).status = 'negotiating';
+    addNotification(feed.find(x => x.id === itemId).ownerId, `Oferta de $${amount} recibida`, '💰');
     saveData(); closeModal(); renderAllViews(); alert("Oferta enviada.");
 }
 function sendManualOffer(id) { const val = Number(document.getElementById('cOffer').value); if(val>0) makeOffer(id, val); }
@@ -466,76 +496,67 @@ function showSellerPanel(negId) {
     document.getElementById('modalTitle').textContent = 'Gestionar Oferta';
     document.getElementById('modalBody').innerHTML = `
         <div class="timer-box"><small>EXPIRA EN</small><div id="countdown" class="timer-countdown">15:00</div></div>
-        <div style="text-align:center;padding:20px;background:var(--bg);border-radius:15px;margin-bottom:15px">
-            <h1 style="color:var(--gold);font-size:42px">$${neg.amount}</h1><p>${item.title}</p>
-        </div>
-        <div style="display:flex;gap:10px;margin-bottom:15px">
-            <button class="btn btn-primary" onclick="acceptOffer(${negId})">ACEPTAR</button>
-            <button class="btn btn-danger" onclick="rejectOffer(${negId})">RECHAZAR</button>
-        </div>
-        <div style="border-top:1px solid var(--border);padding-top:15px">
-            <label style="font-size:12px;color:var(--text-secondary)">Contraoferta:</label>
-            <div style="display:flex;gap:10px;margin-top:5px"><input type="number" id="counterAmt" class="form-input" style="margin:0" placeholder="$"><button class="btn btn-secondary" style="width:auto" onclick="sendCounter(${negId})">Enviar</button></div>
-        </div>`;
+        <div style="text-align:center;padding:20px;background:var(--bg);border-radius:15px;margin-bottom:15px"><h1 style="color:var(--gold);font-size:42px">$${neg.amount}</h1><p>${item.title}</p></div>
+        <div style="display:flex;gap:10px;margin-bottom:15px"><button class="btn btn-primary" onclick="acceptOffer(${negId})">ACEPTAR</button><button class="btn btn-danger" onclick="rejectOffer(${negId})">RECHAZAR</button></div>
+        <div style="border-top:1px solid var(--border);padding-top:15px"><label style="font-size:12px;color:var(--text-secondary)">Contraoferta:</label><div style="display:flex;gap:10px;margin-top:5px"><input type="number" id="counterAmt" class="form-input" style="margin:0" placeholder="$"><button class="btn btn-secondary" style="width:auto" onclick="sendCounter(${negId})">Enviar</button></div></div>`;
     document.getElementById('modal').classList.add('active');
     startTimer(neg.expiresAt);
 }
-
 function startTimer(expiresAt) {
     if(activeInterval) clearInterval(activeInterval);
     const update = () => {
-        const el = document.getElementById('countdown');
-        if(!el) return;
+        const el = document.getElementById('countdown'); if(!el) return;
         const diff = expiresAt - Date.now();
         if(diff <= 0) { el.textContent = "00:00"; clearInterval(activeInterval); return; }
-        const mins = Math.floor(diff/60000);
-        const secs = Math.floor((diff%60000)/1000);
+        const mins = Math.floor(diff/60000); const secs = Math.floor((diff%60000)/1000);
         el.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
     };
-    update();
-    activeInterval = setInterval(update, 1000);
+    update(); activeInterval = setInterval(update, 1000);
 }
-
 function sendCounter(negId) {
-    const val = Number(document.getElementById('counterAmt').value);
-    if(!val) return;
+    const val = Number(document.getElementById('counterAmt').value); if(!val) return;
     const neg = negotiations.find(n => n.id === negId);
-    neg.amount = val;
-    neg.status = 'counter_pending'; 
-    neg.expiresAt = Date.now() + (15 * 60 * 1000); 
-    saveData(); closeModal(); renderAllViews(); alert("Contraoferta enviada al comprador.");
+    neg.amount = val; neg.status = 'counter_pending'; neg.expiresAt = Date.now() + (15 * 60 * 1000); 
+    addNotification(neg.buyerId, `Contraoferta recibida: $${val}`, '🔄');
+    saveData(); closeModal(); renderAllViews(); alert("Contraoferta enviada.");
 }
-
 async function acceptOffer(id) {
     const neg = negotiations.find(n => n.id === id);
     const item = feed.find(f => f.id === neg.newsId);
-    
-    await showProcessing(); // SIMULACION
-    
-    item.price = neg.amount; 
-    item.status = 'sold'; neg.status = 'accepted'; item.buyers.push(neg.buyerId);
-    users[neg.buyerId].balance -= neg.amount; activeUser.balance += neg.amount;
+    neg.status = 'accepted';
+    await showProcessing();
+    processSale(item, neg.amount, neg.buyerId);
+    addNotification(neg.buyerId, `Oferta de $${neg.amount} aceptada.`, '✅');
     saveData(); closeModal(); renderAllViews(); alert("Venta realizada.");
 }
 function rejectOffer(id) {
     const neg = negotiations.find(n => n.id === id);
     neg.status = 'rejected'; feed.find(x => x.id === neg.newsId).status = 'for_sale';
+    addNotification(neg.buyerId, `Oferta rechazada.`, '❌');
     saveData(); closeModal(); renderAllViews(); alert("Oferta rechazada.");
 }
-
 async function acceptCounter(negId) {
     const neg = negotiations.find(n => n.id === negId);
     if(activeUser.balance < neg.amount) return alert("Saldo insuficiente");
     const item = feed.find(f => f.id === neg.newsId);
-    
-    await showProcessing(); // SIMULACION
-    
-    item.price = neg.amount;
-    item.status = 'sold'; neg.status = 'accepted'; item.buyers.push(activeUser.id);
-    activeUser.balance -= neg.amount; users[item.ownerId].balance += neg.amount;
-    saveData(); closeModal(); renderAllViews(); alert("Contraoferta aceptada.");
+    neg.status = 'accepted';
+    await showProcessing();
+    processSale(item, neg.amount, activeUser.id);
+    addNotification(item.ownerId, `Contraoferta de $${neg.amount} aceptada.`, '✅');
+    saveData(); closeModal(); renderAllViews(); alert("Compra realizada.");
 }
 function rejectCounter(negId) { rejectOffer(negId); }
+
+function processSale(item, amount, buyerId) {
+    item.price = amount; 
+    item.buyers.push(buyerId);
+    if(item.licenseType === 'exclusive') item.status = 'sold';
+    users[buyerId].balance -= amount;
+    users[item.ownerId].balance += amount;
+    // TRUST SCORE LOGIC
+    users[item.ownerId].trustScore = (users[item.ownerId].trustScore || 80) + 5;
+    addNotification(item.ownerId, `¡Venta exitosa! TrustScore +5`, '⭐');
+}
 
 // SUBIR
 document.getElementById('uploadForm').addEventListener('submit', (e) => {
@@ -544,7 +565,7 @@ document.getElementById('uploadForm').addEventListener('submit', (e) => {
     const btn = document.getElementById('btnUpload'); btn.textContent = "🛰️ Verificando..."; btn.disabled = true;
     setTimeout(() => {
         const title = document.getElementById('upTitle').value; const price = Number(document.getElementById('upPrice').value); const tags = document.getElementById('upTags').value; const lic = document.getElementById('licInput').value;
-        const newItem = { id: Date.now(), ownerId: activeUser.id, title: title, price: price, lat: -34.6037+(Math.random()-0.5)*0.05, lng: -58.3816+(Math.random()-0.5)*0.05, img: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800', licenseType: lic, status: 'for_sale', hashtags: tags, importance: 'high', trustScore: 95, buyers: [] };
+        const newItem = { id: Date.now(), ownerId: activeUser.id, title: title, price: price, lat: -34.6037+(Math.random()-0.5)*0.05, lng: -58.3816+(Math.random()-0.5)*0.05, img: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800', licenseType: lic, status: 'for_sale', hashtags: tags, importance: 'high', trustScore: activeUser.trustScore, buyers: [], views: 0 };
         feed.unshift(newItem); saveData(); renderMapMarkers(); renderAllViews(); e.target.reset(); closeModal(); showView('home'); btn.textContent = "📤 Publicar"; btn.disabled = false; alert("✅ Noticia subida.");
     }, 1000);
 });
@@ -568,7 +589,7 @@ function renderSales() {
     const pending = negotiations.filter(n => n.status === 'pending' || n.status === 'counter_pending');
     const showNotif = (activeUser.id === 'witness' && pending.some(n => n.status === 'pending')) || (activeUser.id === 'media' && pending.some(n => n.status === 'counter_pending'));
     document.getElementById('pendingOffersCard').style.display = showNotif ? 'block' : 'none';
-    document.getElementById('navNotif').classList.toggle('active', showNotif);
+    document.getElementById('navNotifBadge').style.display = showNotif ? 'block' : 'none';
     
     document.getElementById('offersList').innerHTML = pending.map(n => {
         if (activeUser.id === 'witness' && n.status === 'pending') 
